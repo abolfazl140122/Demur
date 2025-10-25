@@ -5,9 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Demur - Loading Screen</title>
     <style>
-        /* استایل‌های شما بدون تغییر باقی می‌مانند */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* --- شروع تغییرات پس‌زمینه --- */
+            background-color: #000;
+            /* لایه اول: ستاره‌های دور و کوچک */
+            background-image:
+                radial-gradient(circle at center, #fff 1px, transparent 1px),
+                /* لایه دوم: ستاره‌های نزدیک‌تر و بزرگ‌تر */
+                radial-gradient(circle at center, #fff 2px, transparent 2px);
+            background-size: 500px 500px, 800px 800px;
+            background-position: 0 0, 0 0;
+            background-repeat: repeat;
+            /* --- پایان تغییرات پس‌زمینه --- */
+        }
+
+        /* کلاس برای شروع انیمیشن حرکت */
+        body.start-animation {
+            animation: move-forward 30s linear infinite;
+        }
+
+        /* انیمیشن حرکت به جلو */
+        @keyframes move-forward {
+            from {
+                /* موقعیت اولیه پس‌زمینه‌ها */
+                background-position: 0 0, 0 0;
+            }
+            to {
+                /* موقعیت نهایی برای ایجاد حلقه بی‌پایان */
+                /* لایه اول (کندتر) و لایه دوم (سریع‌تر) برای ایجاد حس عمق */
+                background-position: 0 500px, 0 800px;
+            }
+        }
+
+
         .loading-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: transparent; z-index: 9999; opacity: 1; transition: opacity 1.5s ease-in-out; }
         .curtain { position: absolute; width: 100%; height: 50%; background-color: #0a0a0a; z-index: 10; transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
         .curtain-top { top: 0; transform-origin: top; }
@@ -57,11 +92,7 @@
             const titleText = "Demur";
             const typingSpeed = 300;
 
-            // --- شروع تغییرات ---
-
-            // تابع برای پخش موزیک
             function playMusic() {
-                // بررسی می‌کنیم که آیا موزیک در حال پخش است یا نه
                 if (backgroundMusic.paused) {
                     const playPromise = backgroundMusic.play();
                     if (playPromise !== undefined) {
@@ -72,23 +103,24 @@
                 }
             }
 
-            // تلاش برای پخش خودکار موزیک
             const playPromise = backgroundMusic.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
                     console.log("پخش خودکار توسط مرورگر مسدود شد. منتظر تعامل کاربر...");
-                    // اگر پخش خودکار ناموفق بود، یک event listener برای اولین کلیک کاربر اضافه می‌کنیم
                     document.body.addEventListener('click', playMusic, { once: true });
                 });
             }
             
-            // --- پایان تغییرات ---
-
-
             setTimeout(() => {
                 loadingScreen.classList.add('curtains-open');
                 loadingScreen.classList.add('content-visible');
             }, 500);
+
+            // --- شروع تغییرات جاوااسکریپت ---
+
+            // محاسبه زمان پایان تایپ برای شروع انیمیشن پس‌زمینه
+            const startTypingDelay = 1200;
+            const typingDuration = titleText.length * typingSpeed;
 
             setTimeout(() => {
                 let charIndex = 0;
@@ -103,14 +135,18 @@
                     }
                 }
                 type();
-            }, 1200);
 
-            // رویداد کلیک روی دکمه فقط صفحه را حذف می‌کند (موزیک جداگانه مدیریت می‌شود)
+                // دقیقا بعد از اتمام تایپ، انیمیشن پس‌زمینه را فعال می‌کنیم
+                setTimeout(() => {
+                    document.body.classList.add('start-animation');
+                }, typingDuration);
+
+            }, startTypingDelay);
+
+            // --- پایان تغییرات جاوااسکریپت ---
+
             startPrompt.addEventListener('click', () => {
-                // اگر کاربر روی دکمه کلیک کرد، مطمئن می‌شویم موزیک پخش می‌شود
                 playMusic();
-
-                // محو کردن صفحه لودینگ
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.remove();
