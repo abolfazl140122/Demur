@@ -5,196 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Demur - Loading Screen</title>
     <style>
-        /* تنظیمات اولیه و ریست کردن استایل‌ها */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* کانتینر اصلی صفحه لودینگ */
-        .loading-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: transparent;
-            z-index: 9999;
-            opacity: 1;
-            transition: opacity 1.5s ease-in-out;
-        }
-
-        /* پرده‌های سیاه که از وسط باز می‌شوند */
-        .curtain {
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            background-color: #0a0a0a; /* یک مشکی کمی ملایم‌تر */
-            z-index: 10;
-            transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
-        }
-
-        .curtain-top {
-            top: 0;
-            transform-origin: top;
-        }
-
-        .curtain-bottom {
-            bottom: 0;
-            transform-origin: bottom;
-        }
-
-        /* انیمیشن باز شدن پرده‌ها */
-        .curtains-open .curtain-top {
-            transform: scaleY(0);
-        }
-
-        .curtains-open .curtain-bottom {
-            transform: scaleY(0);
-        }
-
-        /* محتوایی که پس از باز شدن پرده‌ها نمایش داده می‌شود */
-        .content {
-            text-align: center;
-            color: white;
-            z-index: 5;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out 0.5s, transform 0.8s ease-out 0.5s;
-        }
-
-        .content-visible .content {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* استایل عنوان بازی "Demur" */
-        .game-title {
-            font-size: clamp(3.5rem, 18vw, 7rem); /* فونت واکنش‌گرا برای هر دستگاهی */
-            font-weight: bold;
-            color: #e9e9e9;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.15),
-                         0 0 25px rgba(255, 255, 255, 0.1);
-            position: relative;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        
-        /* کانتینر برای نگه داشتن عنوان در مرکز هنگام تایپ شدن */
-        .title-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120px;
-            margin-bottom: 25px;
-        }
-
-        /* انیمیشن تایپ گرافیکی و حرفه‌ای */
-        .game-title span {
-            opacity: 0;
-            animation: fadeInChar 0.8s forwards;
-        }
-
-        @keyframes fadeInChar {
-            0% {
-                opacity: 0;
-                transform: translateY(-20px) scale(1.2);
-                text-shadow: 0 0 30px rgba(0, 255, 127, 0.5);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
-            }
-        }
-
-        /* استایل متن "برای شروع کلیک کنید" */
-        .start-prompt {
-            direction: rtl;
-            font-size: clamp(1rem, 4vw, 1.25rem);
-            color: #a0a0a0;
-            cursor: pointer;
-            margin-top: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px; /* فاصله بیشتر بین متن و دایره */
-            letter-spacing: 0.5px;
-            opacity: 0;
-            animation: fadeInPrompt 1s forwards;
-            animation-delay: 2.5s; /* تاخیر تا بعد از اتمام تایپ */
-        }
-
-        @keyframes fadeInPrompt {
-            to { opacity: 1; }
-        }
-
-        /* نشانگر کلیک انیمیشنی و جذاب */
-        .click-indicator {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background-color: rgba(46, 204, 113, 0.3);
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
-        }
-
-        .click-indicator::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background-color: #2ecc71;
-            animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
-        }
-
-        /* انیمیشن تپش برای نشانگر */
-        @keyframes pulse {
-            0% {
-                transform: scale(0.7);
-                opacity: 0.9;
-            }
-            70% {
-                transform: scale(1.4);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(0.7);
-                opacity: 0;
-            }
-        }
+        /* CSS شما بدون تغییر باقی می‌ماند */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .loading-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: transparent; z-index: 9999; opacity: 1; transition: opacity 1.5s ease-in-out; }
+        .curtain { position: absolute; width: 100%; height: 50%; background-color: #0a0a0a; z-index: 10; transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
+        .curtain-top { top: 0; transform-origin: top; }
+        .curtain-bottom { bottom: 0; transform-origin: bottom; }
+        .curtains-open .curtain-top { transform: scaleY(0); }
+        .curtains-open .curtain-bottom { transform: scaleY(0); }
+        .content { text-align: center; color: white; z-index: 5; opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out 0.5s, transform 0.8s ease-out 0.5s; }
+        .content-visible .content { opacity: 1; transform: translateY(0); }
+        .game-title { font-size: clamp(3.5rem, 18vw, 7rem); font-weight: bold; color: #e9e9e9; text-shadow: 0 0 15px rgba(255, 255, 255, 0.15), 0 0 25px rgba(255, 255, 255, 0.1); position: relative; display: inline-block; white-space: nowrap; }
+        .title-container { display: flex; justify-content: center; align-items: center; min-height: 120px; margin-bottom: 25px; }
+        .game-title span { opacity: 0; animation: fadeInChar 0.8s forwards; }
+        @keyframes fadeInChar { 0% { opacity: 0; transform: translateY(-20px) scale(1.2); text-shadow: 0 0 30px rgba(0, 255, 127, 0.5); } 100% { opacity: 1; transform: translateY(0) scale(1); text-shadow: 0 0 15px rgba(255, 255, 255, 0.15); } }
+        .start-prompt { direction: rtl; font-size: clamp(1rem, 4vw, 1.25rem); color: #a0a0a0; cursor: pointer; margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 15px; letter-spacing: 0.5px; opacity: 0; animation: fadeInPrompt 1s forwards; animation-delay: 2.5s; }
+        @keyframes fadeInPrompt { to { opacity: 1; } }
+        .click-indicator { width: 14px; height: 14px; border-radius: 50%; background-color: rgba(46, 204, 113, 0.3); position: relative; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3); }
+        .click-indicator::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: #2ecc71; animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1); }
+        @keyframes pulse { 0% { transform: scale(0.7); opacity: 0.9; } 70% { transform: scale(1.4); opacity: 0; } 100% { transform: scale(0.7); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <!-- تگ صوتی برای موزیک پس‌زمینه -->
     <audio id="background-music" loop>
         <source src="https://github.com/abolfazl140122/Demur/raw/b538e842850633b71ecae1bc71ae6a6032df77d0/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
 
     <div class="loading-container" id="loading-screen">
-        <!-- پرده‌های سیاه -->
         <div class="curtain curtain-top"></div>
         <div class="curtain curtain-bottom"></div>
-
-        <!-- محتوای اصلی -->
         <div class="content">
             <div class="title-container">
                 <h1 class="game-title" id="game-title"></h1>
@@ -211,24 +53,21 @@
             const loadingScreen = document.getElementById('loading-screen');
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
-            const backgroundMusic = document.getElementById('background-music'); // گرفتن عنصر صوتی
+            const backgroundMusic = document.getElementById('background-music');
             const titleText = "Demur";
-            const typingSpeed = 300; // سرعت تایپ (عدد بالاتر برای سرعت کمتر و حس سنگین‌تر)
+            const typingSpeed = 300;
 
-            // ۱. شروع انیمیشن باز شدن پرده‌ها با کمی تاخیر
             setTimeout(() => {
                 loadingScreen.classList.add('curtains-open');
                 loadingScreen.classList.add('content-visible');
             }, 500);
 
-            // ۲. شروع انیمیشن تایپ پس از باز شدن پرده‌ها
             setTimeout(() => {
                 let charIndex = 0;
                 function type() {
                     if (charIndex < titleText.length) {
                         const span = document.createElement('span');
                         span.textContent = titleText.charAt(charIndex);
-                        // اعمال تاخیر متفاوت برای هر حرف جهت ایجاد حس گرافیکی‌تر
                         span.style.animationDelay = `${charIndex * 0.15}s`;
                         gameTitleElement.appendChild(span);
                         charIndex++;
@@ -236,18 +75,30 @@
                     }
                 }
                 type();
-            }, 1200); // شروع تایپ ۱.۲ ثانیه پس از بارگذاری صفحه
+            }, 1200);
 
-            // ۳. افزودن رویداد کلیک برای محو شدن صفحه لودینگ و پخش موزیک
+            // رویداد کلیک برای شروع موزیک و حذف صفحه
             startPrompt.addEventListener('click', () => {
-                // پخش موزیک
-                backgroundMusic.play();
+                console.log("Start prompt clicked. Attempting to play music...");
 
+                // تلاش برای پخش موزیک و مدیریت خطای احتمالی
+                const playPromise = backgroundMusic.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // پخش با موفقیت آغاز شد
+                        console.log("Music started successfully!");
+                    }).catch(error => {
+                        // پخش توسط مرورگر مسدود شد
+                        console.error("Music playback was prevented by the browser:", error);
+                    });
+                }
+
+                // محو کردن صفحه لودینگ
                 loadingScreen.style.opacity = '0';
-                // حذف کامل صفحه لودینگ از صفحه بعد از اتمام انیمیشن محو شدن
                 setTimeout(() => {
                     loadingScreen.remove();
-                }, 1500); // این زمان باید با زمان transition در CSS برابر باشد
+                }, 1500);
             });
         });
     </script>
