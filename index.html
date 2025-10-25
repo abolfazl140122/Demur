@@ -183,7 +183,7 @@
 </head>
 <body>
 
-    <!-- عنصر صوتی برای موسیقی پس‌زمینه -->
+    <!-- تگ صوتی برای موزیک پس‌زمینه -->
     <audio id="background-music" loop>
         <source src="https://github.com/abolfazl140122/Demur/raw/b538e842850633b71ecae1bc71ae6a6032df77d0/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
@@ -211,7 +211,7 @@
             const loadingScreen = document.getElementById('loading-screen');
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
-            const backgroundMusic = document.getElementById('background-music'); // دریافت عنصر صوتی
+            const backgroundMusic = document.getElementById('background-music'); // گرفتن عنصر صوتی
             const titleText = "Demur";
             const typingSpeed = 300; // سرعت تایپ (عدد بالاتر برای سرعت کمتر و حس سنگین‌تر)
 
@@ -238,9 +238,9 @@
                 type();
             }, 1200); // شروع تایپ ۱.۲ ثانیه پس از بارگذاری صفحه
 
-            // ۳. افزودن رویداد کلیک برای محو شدن صفحه لودینگ و پخش موسیقی
+            // ۳. افزودن رویداد کلیک برای محو شدن صفحه لودینگ و پخش موزیک
             startPrompt.addEventListener('click', () => {
-                // پخش موسیقی پس از اولین تعامل کاربر
+                // پخش موزیک
                 backgroundMusic.play();
 
                 loadingScreen.style.opacity = '0';
