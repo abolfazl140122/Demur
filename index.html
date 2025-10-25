@@ -29,8 +29,9 @@
 </head>
 <body>
 
+    <!-- تگ صوتی با لینک مستقیم و صحیح موزیک -->
     <audio id="background-music" loop>
-        <source src="https://github.com/abolfazl140122/Demur/blob/7f09f16769b8c295c4a3b7c6e45ec110d6a72156/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
 
@@ -79,18 +80,11 @@
 
             // رویداد کلیک برای شروع موزیک و حذف صفحه
             startPrompt.addEventListener('click', () => {
-                console.log("Start prompt clicked. Attempting to play music...");
-
-                // تلاش برای پخش موزیک و مدیریت خطای احتمالی
+                // تلاش برای پخش موزیک
                 const playPromise = backgroundMusic.play();
-
                 if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        // پخش با موفقیت آغاز شد
-                        console.log("Music started successfully!");
-                    }).catch(error => {
-                        // پخش توسط مرورگر مسدود شد
-                        console.error("Music playback was prevented by the browser:", error);
+                    playPromise.catch(error => {
+                        console.error("خطا در پخش موزیک:", error);
                     });
                 }
 
