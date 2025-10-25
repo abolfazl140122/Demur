@@ -12,18 +12,20 @@
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #000;
+            background-image:
+                radial-gradient(circle at center, #fff 1px, transparent 1px),
+                radial-gradient(circle at center, #fff 2px, transparent 2px);
+            background-size: 500px 500px, 800px 800px;
+            background-position: 0 0, 0 0;
+            background-repeat: repeat;
         }
-
-        /* Canvas برای پس‌زمینه متحرک */
-        #starfield {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1; /* در زیر همه عناصر قرار می‌گیرد */
+        body.start-animation {
+            animation: move-forward 30s linear infinite;
         }
-
+        @keyframes move-forward {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: 0 500px, 0 800px; }
+        }
         .loading-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: transparent; z-index: 9999; opacity: 1; transition: opacity 1.5s ease-in-out; }
         .curtain { position: absolute; width: 100%; height: 50%; background-color: #0a0a0a; z-index: 10; transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
         .curtain-top { top: 0; transform-origin: top; }
@@ -45,16 +47,17 @@
 </head>
 <body>
 
-    <canvas id="starfield"></canvas>
-
     <audio id="background-music" loop>
         <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
+
+    <!-- صداهای جدید اضافه شده -->
     <audio id="typing-finished-sound" preload="auto">
         <source src="https://github.com/abolfazl140122/Demur/raw/15db07d5cebb23d3a36c454524de0dee514e881f/%D8%AF%D9%85%D9%88%D8%B1.wav" type="audio/wav">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
+
     <audio id="intro-voice" preload="auto">
         <source src="https://github.com/abolfazl140122/Demur/raw/15db07d5cebb23d3a36c454524de0dee514e881f/%D8%A7%D8%B3%DA%A9%D9%88%D8%B1%D8%AA%20%DA%AF%DB%8C%D9%85%20%D8%A8%D8%A7%20%D8%A7%D9%81%D8%AA%D8%AE%D8%A7%D8%B1%20%D8%AA%D9%82%D8%AF%DB%8C%D9%85%20%D9%85%DB%8C%DA%A9%D9%86%D8%AF.wav" type="audio/wav">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
@@ -80,89 +83,48 @@
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
             const backgroundMusic = document.getElementById('background-music');
+            
+            // --- شروع تغییرات ---
             const typingSound = document.getElementById('typing-finished-sound');
             const introVoice = document.getElementById('intro-voice');
+            // --- پایان تغییرات ---
+
             const titleText = "Demur";
             const typingSpeed = 300;
 
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-
-            function resizeCanvas() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas();
-
-            const stars = [];
-            const numStars = 800; 
-
-            for (let i = 0; i < numStars; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    z: Math.random() * canvas.width, 
-                    // --- شروع تغییرات برای بزرگتر شدن ستاره‌ها ---
-                    size: Math.random() * 3 + 1, // اندازه پایه ستاره‌ها بزرگتر شد (بین 1 تا 4 پیکسل)
-                    opacity: Math.random() * 0.7 + 0.3 // کمی درخشان‌تر شدند
-                    // --- پایان تغییرات ---
-                });
-            }
-
-            let speed = 0.5;
-
-            function drawStars() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                stars.forEach(star => {
-                    const perspective = canvas.width / star.z;
-                    const x = (star.x - canvas.width / 2) * perspective + canvas.width / 2;
-                    const y = (star.y - canvas.height / 2) * perspective + canvas.height / 2;
-                    
-                    ctx.beginPath();
-                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-                    // --- شروع تغییرات برای بزرگتر شدن ستاره‌ها ---
-                    // ضریب 0.5 به 0.8 افزایش یافت تا ستاره‌ها در نهایت بزرگتر رندر شوند
-                    ctx.arc(x, y, star.size * perspective * 0.8, 0, 2 * Math.PI);
-                    // --- پایان تغییرات ---
-                    ctx.fill();
-
-                    star.z -= speed;
-
-                    if (star.z <= 0) {
-                        star.z = canvas.width;
-                        star.x = Math.random() * canvas.width;
-                        star.y = Math.random() * canvas.height;
-                    }
-                });
-
-                requestAnimationFrame(drawStars);
-            }
-            drawStars();
-
-            function playAudio(audioElement) {
+            function playMusic(audioElement) {
                 if (audioElement.paused) {
-                    audioElement.play().catch(error => console.error(`خطا در پخش صدا:`, error));
+                    const playPromise = audioElement.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error(`خطا در پخش صدا:`, error);
+                        });
+                    }
                 }
             }
 
             function handleFirstInteraction() {
-                playAudio(backgroundMusic);
+                playMusic(backgroundMusic);
+                // پس از اولین تعامل کاربر، دیگر نیازی به این event listener نیست
                 document.body.removeEventListener('click', handleFirstInteraction);
-                document.body.removeEventListener('touchstart', handleFirstInteraction);
             }
 
-            backgroundMusic.play().catch(() => {
-                console.log("پخش خودکار موسیقی پس‌زمینه مسدود شد. منتظر تعامل کاربر...");
-                document.body.addEventListener('click', handleFirstInteraction, { once: true });
-                document.body.addEventListener('touchstart', handleFirstInteraction, { once: true });
-            });
+            // تلاش برای پخش خودکار موسیقی پس‌زمینه
+            const playPromise = backgroundMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("پخش خودکار موسیقی پس‌زمینه مسدود شد. منتظر تعامل کاربر...");
+                    document.body.addEventListener('click', handleFirstInteraction, { once: true });
+                });
+            }
             
             setTimeout(() => {
                 loadingScreen.classList.add('curtains-open');
                 loadingScreen.classList.add('content-visible');
             }, 500);
+
+            const startTypingDelay = 1200;
+            const typingDuration = titleText.length * typingSpeed;
 
             setTimeout(() => {
                 let charIndex = 0;
@@ -175,22 +137,35 @@
                         charIndex++;
                         setTimeout(type, typingSpeed);
                     } else {
+                        // --- شروع تغییرات ---
+                        // انیمیشن تایپ تمام شده، صدای اول را پخش کن
                         setTimeout(() => {
-                           playAudio(typingSound);
-                        }, 200);
+                           playMusic(typingSound);
+                        }, 200); // یک تاخیر کوتاه برای هماهنگی بهتر
+                        // --- پایان تغییرات ---
                     }
                 }
                 type();
-            }, 1700);
 
+                setTimeout(() => {
+                    document.body.classList.add('start-animation');
+                }, typingDuration);
+
+            }, startTypingDelay);
+
+            // --- شروع تغییرات ---
+            // وقتی صدای اول تمام شد، صدای دوم را پخش کن
             typingSound.addEventListener('ended', () => {
-                playAudio(introVoice);
+                playMusic(introVoice);
             });
+            // --- پایان تغییرات ---
 
             startPrompt.addEventListener('click', () => {
+                // با کلیک کاربر، تمام صداها را متوقف کرده و صفحه را محو می‌کنیم
+                backgroundMusic.pause();
                 typingSound.pause();
                 introVoice.pause();
-                
+
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.remove();
