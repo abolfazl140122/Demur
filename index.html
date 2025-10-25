@@ -2,9 +2,8 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <!-- این متا تگ برای تنظیم ابعاد در گوشی‌های موبایل ضروری است -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Demur - در حال بارگذاری...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Demur - Loading</title>
     <style>
         /* تنظیمات کلی صفحه */
         body, html {
@@ -12,13 +11,13 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* جلوگیری از اسکرول خوردن صفحه */
-            background-color: #000; /* پس‌زمینه اصلی که بعد از باز شدن پرده‌ها دیده می‌شود */
-            font-family: Arial, sans-serif; /* می‌توانید فونت دلخواه خود را جایگزین کنید */
+            overflow: hidden; /* جلوگیری از اسکرول */
+            background-color: #1a1a1a; /* رنگ پس‌زمینه پشت لودینگ */
+            font-family: sans-serif; /* یک فونت استاندارد */
         }
 
-        /* صفحه اصلی لودینگ */
-        #loading-screen {
+        /* کانتینر اصلی لودینگ */
+        .loading-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -28,141 +27,142 @@
             z-index: 9999;
         }
 
-        /* پرده‌های سیاه بالا و پایین */
-        .curtain {
+        /* پنل‌های سیاه برای افکت باز شدن */
+        .split-panel {
             position: absolute;
-            left: 0;
             width: 100%;
             height: 50%;
-            background-color: black;
-            z-index: 2;
-            /* انیمیشن باز شدن با تاخیر و نرمی خاص برای ایجاد حس جدی */
-            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+            background-color: #000;
+            transition: transform 1.2s cubic-bezier(0.86, 0, 0.07, 1); /* انیمیشن نرم برای باز شدن */
+            z-index: 100;
         }
 
-        #curtain-top {
+        .split-panel.top {
             top: 0;
+            left: 0;
         }
 
-        #curtain-bottom {
+        .split-panel.bottom {
             bottom: 0;
+            left: 0;
         }
 
-        /* کلاس کمکی برای اجرای انیمیشن باز شدن پرده‌ها */
-        .open #curtain-top {
+        /* کلاس برای فعال کردن انیمیشن باز شدن */
+        .loading-container.open .split-panel.top {
             transform: translateY(-100%);
         }
 
-        .open #curtain-bottom {
+        .loading-container.open .split-panel.bottom {
             transform: translateY(100%);
         }
-
-        /* محتوای وسط صفحه (عنوان بازی و...) */
-        #content-container {
+        
+        /* محتوای اصلی که بعد از باز شدن نمایش داده می‌شود */
+        .content {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-            text-align: center;
-            color: white;
-            opacity: 0; /* در ابتدا محتوا مخفی است */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0; /* در ابتدا مخفی */
             transition: opacity 0.5s ease-in-out;
+            z-index: 50;
         }
 
-        .visible {
+        /* کلاس برای نمایش محتوا */
+        .content.visible {
             opacity: 1;
         }
 
-        /* عنوان اصلی بازی "Demur" با افکت تایپ */
-        #game-title {
-            font-size: 18vw; /* اندازه فونت وابسته به عرض صفحه برای موبایل */
+        /* استایل عنوان اصلی بازی (Demur) */
+        .game-title {
+            font-size: 8vw; /* اندازه وابسته به عرض صفحه برای موبایل */
+            color: #e0e0e0;
             font-weight: bold;
-            color: #ffffff;
-            letter-spacing: .1em;
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: .12em solid orange; /* کرسر تایپ */
-            width: 0; /* شروع انیمیشن از عرض صفر */
-            /* انیمیشن‌های تایپ و چشمک زدن کرسر */
-            animation:
-                typing 2s steps(5, end) forwards,
+            letter-spacing: 5px;
+            white-space: nowrap; /* جلوگیری از شکستن خط */
+            overflow: hidden; /* برای افکت تایپ */
+            border-right: .15em solid orange; /* کرسر تایپ */
+            width: 0;
+            animation: 
+                typing 2.5s steps(5, end) forwards,
                 blink-caret .75s step-end infinite;
         }
-
-        /* انیمیشن تایپ کردن */
+        
+        /* انیمیشن تایپ متن */
         @keyframes typing {
             from { width: 0 }
-            to { width: 5.5em; } /* عرض نهایی بر اساس تعداد حروف و فاصله بین آنها */
+            to { width: 9.5em; } /* عرض نهایی متن */
         }
 
-        /* انیمیشن چشمک زدن کرسر تایپ */
+        /* انیمیشن چشمک زدن کرسر */
         @keyframes blink-caret {
             from, to { border-color: transparent }
             50% { border-color: orange; }
         }
 
-        /* متن "برای شروع کلیک کنید" و انیمیشن دایره */
-        #start-prompt {
-            margin-top: 25px;
-            font-size: 4vw;
+        /* متن "برای شروع کلیک کنید" */
+        .click-prompt {
+            font-size: 2.5vw;
+            color: #a0a0a0;
+            margin-top: 20px;
             display: flex;
-            justify-content: center;
             align-items: center;
             opacity: 0; /* در ابتدا مخفی */
-            transition: opacity 1s ease-in 0.5s; /* با تاخیر ظاهر می‌شود */
+            animation: fadeIn 1s ease-in-out forwards;
+            animation-delay: 3s; /* تاخیر برای نمایش بعد از تایپ عنوان */
+        }
+        
+        /* انیمیشن محو شدن و ظاهر شدن */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        #start-prompt.visible {
-            opacity: 1;
-        }
-
-        /* انیمیشن دایره کلیک */
-        .click-animation {
+        /* دایره متحرک کنار متن */
+        .click-indicator {
             width: 12px;
             height: 12px;
-            border: 2px solid white;
+            background-color: #e0e0e0;
             border-radius: 50%;
             margin-right: 15px;
-            animation: click-pulse 1.5s infinite;
+            animation: pulse 1.5s infinite;
         }
 
-        @keyframes click-pulse {
+        /* انیمیشن ضربان برای دایره */
+        @keyframes pulse {
             0% {
                 transform: scale(0.9);
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+                box-shadow: 0 0 0 0 rgba(224, 224, 224, 0.7);
             }
             70% {
                 transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+                box-shadow: 0 0 0 10px rgba(224, 224, 224, 0);
             }
             100% {
                 transform: scale(0.9);
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-            }
-        }
-
-        /* تنظیمات برای صفحه‌های بزرگتر مانند تبلت و دسکتاپ */
-        @media (min-width: 768px) {
-            #game-title {
-                font-size: 8rem;
-            }
-            #start-prompt {
-                font-size: 1.5rem;
+                box-shadow: 0 0 0 0 rgba(224, 224, 224, 0);
             }
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <div id="curtain-top" class="curtain"></div>
-        <div id="curtain-bottom" class="curtain"></div>
-        <div id="content-container">
-            <h1 id="game-title"></h1>
-            <div id="start-prompt">
-                <p>برای شروع کلیک کنید</p>
-                <div class="click-animation"></div>
+    <!-- کانتینر لودینگ -->
+    <div class="loading-container" id="loading-container">
+        <!-- پنل‌های سیاه -->
+        <div class="split-panel top"></div>
+        <div class="split-panel bottom"></div>
+
+        <!-- محتوای اصلی -->
+        <div class="content" id="content">
+            <h1 class="game-title">Demur</h1>
+            <div class="click-prompt">
+                <div class="click-indicator"></div>
+                <span>برای شروع کلیک کنید</span>
             </div>
         </div>
     </div>
@@ -170,44 +170,39 @@
     <script>
         // منتظر می‌مانیم تا کل صفحه بارگذاری شود
         window.addEventListener('load', () => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const contentContainer = document.getElementById('content-container');
-            const gameTitle = document.getElementById('game-title');
-            const startPrompt = document.getElementById('start-prompt');
+            const loadingContainer = document.getElementById('loading-container');
+            const content = document.getElementById('content');
+            const gameTitle = document.querySelector('.game-title');
 
-            // مرحله ۱: انیمیشن باز شدن پرده‌ها
-            // با یک تاخیر کوتاه شروع می‌شود تا حس بهتری بدهد
+            // مرحله ۱: افکت باز شدن صفحه سیاه
+            // بعد از یک تاخیر کوتاه، کلاس 'open' اضافه می‌شود تا انیمیشن باز شدن فعال شود
             setTimeout(() => {
-                loadingScreen.classList.add('open');
+                loadingContainer.classList.add('open');
             }, 500); // 0.5 ثانیه تاخیر
 
             // مرحله ۲: نمایش محتوا و شروع تایپ
-            // این تاخیر باید کمی بیشتر از شروع انیمیشن پرده‌ها باشد
+            // بعد از شروع باز شدن، محتوا به آرامی ظاهر می‌شود
             setTimeout(() => {
-                contentContainer.classList.add('visible');
-                gameTitle.textContent = "Demur"; // متن را اضافه می‌کنیم تا انیمیشن شروع شود
-            }, 1000); // 1 ثانیه تاخیر
+                content.classList.add('visible');
+            }, 1200); // 1.2 ثانیه تاخیر (همزمان با باز شدن)
 
-            // مرحله ۳: وقتی انیمیشن تایپ تمام شد، کرسر را حذف و متن راهنما را نمایش بده
-            gameTitle.addEventListener('animationend', (e) => {
-                // فقط به انیمیشن typing واکنش نشان می‌دهیم
-                if (e.animationName === 'typing') {
-                    gameTitle.style.borderRight = 'none'; // حذف کرسر
-                    startPrompt.classList.add('visible');
-                }
-            });
+            // مرحله ۳: حذف کرسر چشمک‌زن بعد از پایان تایپ
+            setTimeout(() => {
+                gameTitle.style.borderRight = 'none';
+            }, 3000); // 3 ثانیه تاخیر (2.5 ثانیه انیمیشن + 0.5 ثانیه)
 
-            // مرحله ۴: با کلیک روی صفحه، لودینگ محو شود
-            loadingScreen.addEventListener('click', () => {
-                // در اینجا کد مربوط به شروع بازی اصلی قرار می‌گیرد
-                console.log("بازی شروع شد!");
-                loadingScreen.style.transition = 'opacity 0.5s';
-                loadingScreen.style.opacity = '0';
-
-                // بعد از محو شدن، عنصر لودینگ را از صفحه حذف می‌کنیم
+            // مرحله ۴: رویداد کلیک برای ورود به بازی
+            // با کلیک روی صفحه، می‌توانید کاربر را به صفحه اصلی بازی هدایت کنید
+            loadingContainer.addEventListener('click', () => {
+                // در اینجا می‌توانید کد مربوط به شروع بازی یا رفتن به صفحه بعد را قرار دهید
+                // برای مثال، محو کردن صفحه لودینگ:
+                loadingContainer.style.transition = 'opacity 0.5s';
+                loadingContainer.style.opacity = '0';
+                
+                // بعد از محو شدن، آن را از صفحه حذف کنید تا قابل کلیک نباشد
                 setTimeout(() => {
-                    loadingScreen.remove();
-                }, 500); // زمان باید با transition برابر باشد
+                    loadingContainer.style.display = 'none';
+                }, 500);
             });
         });
     </script>
