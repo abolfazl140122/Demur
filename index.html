@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Demur - Loading</title>
+    <title>Demur - Loading Screen</title>
     <style>
         /* تنظیمات کلی صفحه */
         body, html {
@@ -11,201 +11,198 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* جلوگیری از اسکرول */
-            background-color: #1a1a1a; /* رنگ پس‌زمینه پشت لودینگ */
-            font-family: sans-serif; /* یک فونت استاندارد */
+            overflow: hidden;
+            background-color: #1a1a1a; /* پس‌زمینه اصلی که بعد از باز شدن پرده‌ها دیده می‌شود */
+            font-family: 'Arial', sans-serif; /* می‌توانید از فونت‌های خاص بازی خود استفاده کنید */
         }
 
-        /* کانتینر اصلی لودینگ */
+        /* کانتینر اصلی صفحه لودینگ */
         .loading-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
             cursor: pointer;
-            z-index: 9999;
         }
 
-        /* پنل‌های سیاه برای افکت باز شدن */
-        .split-panel {
+        /* پرده‌های سیاه بالا و پایین */
+        .curtain {
             position: absolute;
             width: 100%;
             height: 50%;
             background-color: #000;
-            transition: transform 1.2s cubic-bezier(0.86, 0, 0.07, 1); /* انیمیشن نرم برای باز شدن */
-            z-index: 100;
+            z-index: 10;
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1); /* انیمیشن نرم برای باز شدن */
         }
 
-        .split-panel.top {
+        .curtain.top {
             top: 0;
-            left: 0;
         }
 
-        .split-panel.bottom {
+        .curtain.bottom {
             bottom: 0;
-            left: 0;
         }
 
-        /* کلاس برای فعال کردن انیمیشن باز شدن */
-        .loading-container.open .split-panel.top {
+        /* حالت باز شده پرده‌ها */
+        .loading-container.opened .curtain.top {
             transform: translateY(-100%);
         }
 
-        .loading-container.open .split-panel.bottom {
+        .loading-container.opened .curtain.bottom {
             transform: translateY(100%);
         }
-        
-        /* محتوای اصلی که بعد از باز شدن نمایش داده می‌شود */
+
+        /* محتوای اصلی (نام بازی و پیام) */
         .content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0; /* در ابتدا مخفی */
-            transition: opacity 0.5s ease-in-out;
-            z-index: 50;
+            opacity: 0;
+            text-align: center;
+            z-index: 5;
+            transition: opacity 1s ease-in-out 1s; /* با تاخیر ظاهر می‌شود */
         }
 
-        /* کلاس برای نمایش محتوا */
-        .content.visible {
+        .loading-container.opened .content {
             opacity: 1;
         }
-
-        /* استایل عنوان اصلی بازی (Demur) */
+        
+        /* استایل نام بازی "Demur" */
         .game-title {
-            font-size: 8vw; /* اندازه وابسته به عرض صفحه برای موبایل */
             color: #e0e0e0;
+            font-size: 15vw; /* استفاده از vw برای واکنش‌گرا بودن اندازه فونت */
             font-weight: bold;
             letter-spacing: 5px;
-            white-space: nowrap; /* جلوگیری از شکستن خط */
-            overflow: hidden; /* برای افکت تایپ */
-            border-right: .15em solid orange; /* کرسر تایپ */
-            width: 0;
-            animation: 
-                typing 2.5s steps(5, end) forwards,
-                blink-caret .75s step-end infinite;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2);
+            position: relative;
+            display: inline-block; /* برای اینکه عرض عنصر به اندازه متن باشد و در مرکز بماند */
+        }
+
+        /* نشانگر تایپ (cursor) */
+        .game-title::after {
+            content: '_';
+            position: absolute;
+            right: -25px;
+            color: #00ff9d;
+            font-weight: bold;
+            animation: blink 0.8s infinite;
         }
         
-        /* انیمیشن تایپ متن */
-        @keyframes typing {
-            from { width: 0 }
-            to { width: 9.5em; } /* عرض نهایی متن */
+        /* انیمیشن چشمک‌زن نشانگر */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
-        /* انیمیشن چشمک زدن کرسر */
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: orange; }
-        }
-
-        /* متن "برای شروع کلیک کنید" */
+        /* پیام "برای شروع کلیک کنید" */
         .click-prompt {
-            font-size: 2.5vw;
-            color: #a0a0a0;
+            color: #aaa;
+            font-size: 4vw;
             margin-top: 20px;
-            display: flex;
-            align-items: center;
             opacity: 0; /* در ابتدا مخفی */
-            animation: fadeIn 1s ease-in-out forwards;
-            animation-delay: 3s; /* تاخیر برای نمایش بعد از تایپ عنوان */
-        }
-        
-        /* انیمیشن محو شدن و ظاهر شدن */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            transition: opacity 1s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* دایره متحرک کنار متن */
+        /* دایره متحرک کنار پیام */
         .click-indicator {
             width: 12px;
             height: 12px;
-            background-color: #e0e0e0;
+            background-color: #00ff9d;
             border-radius: 50%;
-            margin-right: 15px;
+            margin-right: 15px; /* فاصله از متن */
+            box-shadow: 0 0 10px #00ff9d, 0 0 20px #00ff9d;
             animation: pulse 1.5s infinite;
         }
 
         /* انیمیشن ضربان برای دایره */
         @keyframes pulse {
-            0% {
-                transform: scale(0.9);
-                box-shadow: 0 0 0 0 rgba(224, 224, 224, 0.7);
+            0% { transform: scale(0.9); box-shadow: 0 0 10px #00ff9d, 0 0 20px #00ff9d; }
+            70% { transform: scale(1.1); box-shadow: 0 0 15px #00ff9d, 0 0 30px #00ff9d; }
+            100% { transform: scale(0.9); box-shadow: 0 0 10px #00ff9d, 0 0 20px #00ff9d; }
+        }
+        
+        /* برای سازگاری بهتر با اندازه‌های مختلف صفحه */
+        @media (min-width: 768px) {
+            .game-title {
+                font-size: 100px;
             }
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 10px rgba(224, 224, 224, 0);
-            }
-            100% {
-                transform: scale(0.9);
-                box-shadow: 0 0 0 0 rgba(224, 224, 224, 0);
+            .click-prompt {
+                font-size: 24px;
             }
         }
+
     </style>
 </head>
 <body>
 
-    <!-- کانتینر لودینگ -->
     <div class="loading-container" id="loading-container">
-        <!-- پنل‌های سیاه -->
-        <div class="split-panel top"></div>
-        <div class="split-panel bottom"></div>
+        <!-- پرده‌های باز شونده -->
+        <div class="curtain top"></div>
+        <div class="curtain bottom"></div>
 
-        <!-- محتوای اصلی -->
-        <div class="content" id="content">
-            <h1 class="game-title">Demur</h1>
-            <div class="click-prompt">
-                <div class="click-indicator"></div>
-                <span>برای شروع کلیک کنید</span>
-            </div>
+        <!-- محتوایی که بعد از باز شدن پرده‌ها نمایش داده می‌شود -->
+        <div class="content">
+            <h1 class="game-title" id="game-title"></h1>
+            <p class="click-prompt" id="click-prompt">
+                <span class="click-indicator"></span>
+                برای شروع کلیک کنید
+            </p>
         </div>
     </div>
 
     <script>
-        // منتظر می‌مانیم تا کل صفحه بارگذاری شود
-        window.addEventListener('load', () => {
+        window.onload = () => {
             const loadingContainer = document.getElementById('loading-container');
-            const content = document.getElementById('content');
-            const gameTitle = document.querySelector('.game-title');
+            const gameTitleElement = document.getElementById('game-title');
+            const clickPromptElement = document.getElementById('click-prompt');
+            const titleText = "Demur";
+            const typingSpeed = 250; // زمان بین تایپ هر حرف (میلی‌ثانیه) - برای آهسته‌تر شدن، عدد را بیشتر کنید
 
-            // مرحله ۱: افکت باز شدن صفحه سیاه
-            // بعد از یک تاخیر کوتاه، کلاس 'open' اضافه می‌شود تا انیمیشن باز شدن فعال شود
+            // ۱. شروع انیمیشن باز شدن پرده‌ها
             setTimeout(() => {
-                loadingContainer.classList.add('open');
-            }, 500); // 0.5 ثانیه تاخیر
+                loadingContainer.classList.add('opened');
+            }, 500); // نیم ثانیه تاخیر اولیه
 
-            // مرحله ۲: نمایش محتوا و شروع تایپ
-            // بعد از شروع باز شدن، محتوا به آرامی ظاهر می‌شود
+            // ۲. شروع انیمیشن تایپ بعد از باز شدن پرده‌ها
             setTimeout(() => {
-                content.classList.add('visible');
-            }, 1200); // 1.2 ثانیه تاخیر (همزمان با باز شدن)
+                typeWriter(titleText, 0);
+            }, 2000); // ۲ ثانیه تاخیر تا پرده‌ها کاملا باز شوند
 
-            // مرحله ۳: حذف کرسر چشمک‌زن بعد از پایان تایپ
-            setTimeout(() => {
-                gameTitle.style.borderRight = 'none';
-            }, 3000); // 3 ثانیه تاخیر (2.5 ثانیه انیمیشن + 0.5 ثانیه)
+            // تابع برای انیمیشن تایپ کردن
+            function typeWriter(text, index) {
+                if (index < text.length) {
+                    gameTitleElement.innerHTML += text.charAt(index);
+                    index++;
+                    setTimeout(() => typeWriter(text, index), typingSpeed);
+                } else {
+                    // وقتی تایپ تمام شد
+                    setTimeout(() => {
+                        // حذف نشانگر چشمک‌زن
+                        gameTitleElement.style.borderRight = 'none';
+                        gameTitleElement.classList.add('no-cursor');
+                         let cursor = document.querySelector(".game-title::after");
+                         if(cursor) cursor.style.display = 'none';
+                         gameTitleElement.style.setProperty('--after-display', 'none');
 
-            // مرحله ۴: رویداد کلیک برای ورود به بازی
-            // با کلیک روی صفحه، می‌توانید کاربر را به صفحه اصلی بازی هدایت کنید
-            loadingContainer.addEventListener('click', () => {
-                // در اینجا می‌توانید کد مربوط به شروع بازی یا رفتن به صفحه بعد را قرار دهید
-                // برای مثال، محو کردن صفحه لودینگ:
-                loadingContainer.style.transition = 'opacity 0.5s';
-                loadingContainer.style.opacity = '0';
-                
-                // بعد از محو شدن، آن را از صفحه حذف کنید تا قابل کلیک نباشد
-                setTimeout(() => {
-                    loadingContainer.style.display = 'none';
-                }, 500);
-            });
-        });
+
+                        // نمایش پیام "برای شروع کلیک کنید"
+                        clickPromptElement.style.opacity = '1';
+                    }, 500);
+                }
+            }
+            
+            // ۳. رویداد کلیک برای رفتن به مرحله بعد
+            loadingContainer.onclick = () => {
+                console.log("صفحه لودینگ کلیک شد! در اینجا به منوی اصلی بازی بروید.");
+                // در بازی واقعی، اینجا کد مربوط به بارگذاری صحنه اصلی بازی را قرار می‌دهید.
+                // مثلا: SceneManager.LoadScene("MainMenu");
+            };
+        };
     </script>
-
 </body>
 </html>
