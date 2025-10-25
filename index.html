@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Demur - Loading Screen</title>
+    <title>Demur - Professional Loading Screen</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -11,38 +11,91 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* --- شروع تغییرات پس‌زمینه --- */
             background-color: #000;
-            /* لایه اول: ستاره‌های دور و کوچک */
-            background-image:
-                radial-gradient(circle at center, #fff 1px, transparent 1px),
-                /* لایه دوم: ستاره‌های نزدیک‌تر و بزرگ‌تر */
-                radial-gradient(circle at center, #fff 2px, transparent 2px);
-            background-size: 500px 500px, 800px 800px;
-            background-position: 0 0, 0 0;
-            background-repeat: repeat;
-            /* --- پایان تغییرات پس‌زمینه --- */
         }
 
-        /* کلاس برای شروع انیمیشن حرکت */
-        body.start-animation {
-            animation: move-forward 30s linear infinite;
+        /* --- کانتینر اصلی برای افکت پارالاکس --- */
+        .parallax-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px; /* ایجاد پرسپکتیو برای عمق سه بعدی */
+            transform-style: preserve-3d;
+            overflow: hidden;
         }
 
-        /* انیمیشن حرکت به جلو */
-        @keyframes move-forward {
+        /* --- لایه‌های ستاره‌ها --- */
+        .stars {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px; /* عرض و ارتفاع اولیه کوچک برای ستاره ها */
+            height: 2px;
+            background: transparent;
+            border-radius: 50%;
+        }
+
+        /* تابع Sass برای تولید box-shadow تصادفی */
+        /* در CSS خالص، این مقادیر باید به صورت دستی تولید شوند. */
+        /* برای مثال: box-shadow: 100px 200px #fff, 50px -300px #eee, ... */
+        .stars1 {
+            /* ستاره‌های بسیار دور و کوچک */
+            box-shadow: /* ... 2000 ستاره با موقعیت تصادفی ... */;
+            animation: move-stars 150s linear infinite;
+        }
+
+        .stars2 {
+            /* ستاره‌های با فاصله متوسط */
+            box-shadow: /* ... 1000 ستاره با موقعیت تصادفی ... */;
+            animation: move-stars 100s linear infinite;
+        }
+
+        .stars3 {
+            /* ستاره‌های نزدیک‌تر و بزرگ‌تر */
+            box-shadow: /* ... 200 ستاره با موقعیت تصادفی ... */;
+            animation: move-stars 50s linear infinite;
+        }
+        
+        /* تولید مقادیر box-shadow با جاوا اسکریپت برای سادگی */
+        /* کد جاوااسکریپت در ادامه برای این کار ارائه شده است */
+
+
+        @keyframes move-stars {
             from {
-                /* موقعیت اولیه پس‌زمینه‌ها */
-                background-position: 0 0, 0 0;
+                transform: translateY(-1000px);
             }
             to {
-                /* موقعیت نهایی برای ایجاد حلقه بی‌پایان */
-                /* لایه اول (کندتر) و لایه دوم (سریع‌تر) برای ایجاد حس عمق */
-                background-position: 0 500px, 0 800px;
+                transform: translateY(1000px);
             }
         }
 
+        /* --- لایه سحابی و غبار کیهانی --- */
+        .nebula {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(ellipse at center, rgba(45, 25, 80, 0.4) 0%, rgba(0,0,0,0) 60%);
+            opacity: 0;
+            animation: subtle-glow 20s ease-in-out infinite alternate, move-nebula 200s linear infinite;
+            transform-origin: center;
+        }
+        
+        @keyframes subtle-glow {
+            from { opacity: 0.2; transform: scale(1); }
+            to { opacity: 0.5; transform: scale(1.1); }
+        }
+        
+        @keyframes move-nebula {
+            from { transform: rotate(0deg) translateX(50px); }
+            to { transform: rotate(360deg) translateX(50px); }
+        }
 
+
+        /* --- استایل‌های صفحه لودینگ (بدون تغییر) --- */
         .loading-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: transparent; z-index: 9999; opacity: 1; transition: opacity 1.5s ease-in-out; }
         .curtain { position: absolute; width: 100%; height: 50%; background-color: #0a0a0a; z-index: 10; transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1); }
         .curtain-top { top: 0; transform-origin: top; }
@@ -64,6 +117,14 @@
 </head>
 <body>
 
+    <!-- کانتینر برای پس‌زمینه حرفه‌ای -->
+    <div class="parallax-container">
+        <div class="nebula"></div>
+        <div class="stars stars1"></div>
+        <div class="stars stars2"></div>
+        <div class="stars stars3"></div>
+    </div>
+    
     <audio id="background-music" loop>
         <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
@@ -85,6 +146,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- تولید ستاره‌ها با جاوا اسکریپت ---
+            function createStars(selector, count) {
+                const starsElement = document.querySelector(selector);
+                let boxShadow = '';
+                for (let i = 0; i < count; i++) {
+                    const x = Math.floor(Math.random() * 2000) - 1000; // محدوده -1000 تا 1000
+                    const y = Math.floor(Math.random() * 2000) - 1000;
+                    const size = Math.random() * 2;
+                    const color = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.5})`;
+                    boxShadow += `${x}px ${y}px ${size}px ${color}, `;
+                }
+                starsElement.style.boxShadow = boxShadow.slice(0, -2); // حذف کاما و فاصله آخر
+            }
+
+            createStars('.stars1', 2000); // لایه دور
+            createStars('.stars2', 1000); // لایه متوسط
+            createStars('.stars3', 200);  // لایه نزدیک
+
+            // --- کدهای مربوط به صفحه لودینگ (بدون تغییر) ---
             const loadingScreen = document.getElementById('loading-screen');
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
@@ -116,12 +196,7 @@
                 loadingScreen.classList.add('content-visible');
             }, 500);
 
-            // --- شروع تغییرات جاوااسکریپت ---
-
-            // محاسبه زمان پایان تایپ برای شروع انیمیشن پس‌زمینه
             const startTypingDelay = 1200;
-            const typingDuration = titleText.length * typingSpeed;
-
             setTimeout(() => {
                 let charIndex = 0;
                 function type() {
@@ -135,15 +210,7 @@
                     }
                 }
                 type();
-
-                // دقیقا بعد از اتمام تایپ، انیمیشن پس‌زمینه را فعال می‌کنیم
-                setTimeout(() => {
-                    document.body.classList.add('start-animation');
-                }, typingDuration);
-
             }, startTypingDelay);
-
-            // --- پایان تغییرات جاوااسکریپت ---
 
             startPrompt.addEventListener('click', () => {
                 playMusic();
