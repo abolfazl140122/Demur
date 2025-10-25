@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Demur - Loading Screen</title>
     <style>
-        /* CSS شما بدون تغییر باقی می‌ماند */
+        /* استایل‌های شما بدون تغییر باقی می‌مانند */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .loading-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: transparent; z-index: 9999; opacity: 1; transition: opacity 1.5s ease-in-out; }
@@ -29,7 +29,6 @@
 </head>
 <body>
 
-    <!-- تگ صوتی با لینک مستقیم و صحیح موزیک -->
     <audio id="background-music" loop>
         <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
@@ -58,6 +57,34 @@
             const titleText = "Demur";
             const typingSpeed = 300;
 
+            // --- شروع تغییرات ---
+
+            // تابع برای پخش موزیک
+            function playMusic() {
+                // بررسی می‌کنیم که آیا موزیک در حال پخش است یا نه
+                if (backgroundMusic.paused) {
+                    const playPromise = backgroundMusic.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error("خطا در پخش موزیک:", error);
+                        });
+                    }
+                }
+            }
+
+            // تلاش برای پخش خودکار موزیک
+            const playPromise = backgroundMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("پخش خودکار توسط مرورگر مسدود شد. منتظر تعامل کاربر...");
+                    // اگر پخش خودکار ناموفق بود، یک event listener برای اولین کلیک کاربر اضافه می‌کنیم
+                    document.body.addEventListener('click', playMusic, { once: true });
+                });
+            }
+            
+            // --- پایان تغییرات ---
+
+
             setTimeout(() => {
                 loadingScreen.classList.add('curtains-open');
                 loadingScreen.classList.add('content-visible');
@@ -78,15 +105,10 @@
                 type();
             }, 1200);
 
-            // رویداد کلیک برای شروع موزیک و حذف صفحه
+            // رویداد کلیک روی دکمه فقط صفحه را حذف می‌کند (موزیک جداگانه مدیریت می‌شود)
             startPrompt.addEventListener('click', () => {
-                // تلاش برای پخش موزیک
-                const playPromise = backgroundMusic.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error("خطا در پخش موزیک:", error);
-                    });
-                }
+                // اگر کاربر روی دکمه کلیک کرد، مطمئن می‌شویم موزیک پخش می‌شود
+                playMusic();
 
                 // محو کردن صفحه لودینگ
                 loadingScreen.style.opacity = '0';
