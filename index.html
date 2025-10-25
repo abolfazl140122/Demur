@@ -45,7 +45,6 @@
 </head>
 <body>
 
-    <!-- عنصر Canvas برای پس‌زمینه متحرک -->
     <canvas id="starfield"></canvas>
 
     <audio id="background-music" loop>
@@ -86,7 +85,6 @@
             const titleText = "Demur";
             const typingSpeed = 300;
 
-            // --- کد جدید برای پس‌زمینه ستاره‌ای با Canvas ---
             const canvas = document.getElementById('starfield');
             const ctx = canvas.getContext('2d');
 
@@ -98,15 +96,17 @@
             resizeCanvas();
 
             const stars = [];
-            const numStars = 800; // تعداد ستاره‌ها را برای تراکم بیشتر افزایش دهید
+            const numStars = 800; 
 
             for (let i = 0; i < numStars; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    z: Math.random() * canvas.width, // عمق ستاره
-                    size: Math.random() * 2.5 + 0.5, // اندازه متنوع
-                    opacity: Math.random() * 0.5 + 0.5
+                    z: Math.random() * canvas.width, 
+                    // --- شروع تغییرات برای بزرگتر شدن ستاره‌ها ---
+                    size: Math.random() * 3 + 1, // اندازه پایه ستاره‌ها بزرگتر شد (بین 1 تا 4 پیکسل)
+                    opacity: Math.random() * 0.7 + 0.3 // کمی درخشان‌تر شدند
+                    // --- پایان تغییرات ---
                 });
             }
 
@@ -116,20 +116,20 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 stars.forEach(star => {
-                    // محاسبه موقعیت ستاره بر اساس عمق (اثر پارالاکس)
                     const perspective = canvas.width / star.z;
                     const x = (star.x - canvas.width / 2) * perspective + canvas.width / 2;
                     const y = (star.y - canvas.height / 2) * perspective + canvas.height / 2;
                     
                     ctx.beginPath();
                     ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-                    ctx.arc(x, y, star.size * perspective * 0.5, 0, 2 * Math.PI);
+                    // --- شروع تغییرات برای بزرگتر شدن ستاره‌ها ---
+                    // ضریب 0.5 به 0.8 افزایش یافت تا ستاره‌ها در نهایت بزرگتر رندر شوند
+                    ctx.arc(x, y, star.size * perspective * 0.8, 0, 2 * Math.PI);
+                    // --- پایان تغییرات ---
                     ctx.fill();
 
-                    // حرکت ستاره
                     star.z -= speed;
 
-                    // اگر ستاره از صفحه خارج شد، آن را به موقعیت جدیدی در دوردست منتقل کن
                     if (star.z <= 0) {
                         star.z = canvas.width;
                         star.x = Math.random() * canvas.width;
@@ -140,8 +140,6 @@
                 requestAnimationFrame(drawStars);
             }
             drawStars();
-            // --- پایان کد Canvas ---
-
 
             function playAudio(audioElement) {
                 if (audioElement.paused) {
@@ -155,7 +153,6 @@
                 document.body.removeEventListener('touchstart', handleFirstInteraction);
             }
 
-            // تلاش برای پخش خودکار موسیقی و افزودن شنونده رویداد برای تعامل کاربر
             backgroundMusic.play().catch(() => {
                 console.log("پخش خودکار موسیقی پس‌زمینه مسدود شد. منتظر تعامل کاربر...");
                 document.body.addEventListener('click', handleFirstInteraction, { once: true });
@@ -184,20 +181,16 @@
                     }
                 }
                 type();
-            }, 1700); // تاخیر کمی بیشتر برای باز شدن کامل پرده‌ها
+            }, 1700);
 
             typingSound.addEventListener('ended', () => {
                 playAudio(introVoice);
             });
 
             startPrompt.addEventListener('click', () => {
-                // صداهای کوتاه را متوقف کن اما موسیقی پس‌زمینه را ادامه بده
                 typingSound.pause();
                 introVoice.pause();
                 
-                // --- ویرایش برای عدم قطع موسیقی پس‌زمینه ---
-                // backgroundMusic.pause(); // این خط حذف یا کامنت شد
-
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => {
                     loadingScreen.remove();
