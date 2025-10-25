@@ -1,1 +1,218 @@
-.
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Demur - Loading...</title>
+    <style>
+        /* تنظیمات کلی صفحه */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* جلوگیری از اسکرول */
+            background-color: #111; /* یک پس‌زمینه تاریک برای فضای پشت انیمیشن */
+            font-family: 'Arial', sans-serif; /* یک فونت استاندارد و جدی */
+            -webkit-user-select: none; /* جلوگیری از انتخاب متن */
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* کانتینر اصلی لودینگ که کل صفحه را می‌پوشاند */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* پرده‌های سیاه بالا و پایین */
+        .curtain {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background-color: #000;
+            z-index: 100;
+            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1); /* انیمیشن نرم برای باز شدن */
+        }
+
+        #top-curtain {
+            top: 0;
+        }
+
+        #bottom-curtain {
+            bottom: 0;
+        }
+
+        /* حالت باز شده پرده‌ها */
+        .loading-container.open #top-curtain {
+            transform: translateY(-100%);
+        }
+
+        .loading-container.open #bottom-curtain {
+            transform: translateY(100%);
+        }
+
+        /* محتوای اصلی که بعد از باز شدن پرده‌ها نمایش داده می‌شود */
+        .content {
+            opacity: 0;
+            text-align: center;
+            transform: scale(0.95);
+            transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+            transition-delay: 1s; /* تاخیر برای نمایش بعد از باز شدن پرده */
+            z-index: 50;
+        }
+
+        .loading-container.open .content {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* استایل عنوان بازی "Demur" با افکت تایپ */
+        h1 {
+            color: #e0e0e0;
+            font-size: 8vw; /* اندازه وابسته به عرض صفحه برای موبایل */
+            font-weight: bold;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin: 0;
+            position: relative;
+        }
+        
+        /* خط چشمک‌زن برای افکت تایپ */
+        h1::after {
+            content: '_';
+            position: absolute;
+            right: -20px;
+            color: #00ff99; /* یک رنگ سایبری برای حس جدی و مدرن */
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { color: transparent; }
+            50% { color: #00ff99; }
+        }
+
+        /* استایل متن "برای شروع کلیک کنید" */
+        .start-prompt {
+            color: #aaa;
+            font-size: 2.5vw;
+            margin-top: 20px;
+            opacity: 0; /* در ابتدا مخفی */
+            transition: opacity 0.8s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .start-prompt.visible {
+            opacity: 1;
+        }
+
+        /* دایره متحرک کنار متن */
+        .click-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: transparent;
+            border: 2px solid #00ff99;
+            border-radius: 50%;
+            margin-right: 15px; /* فاصله از متن */
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(0, 255, 153, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(0, 255, 153, 0);
+            }
+            100% {
+                transform: scale(0.9);
+                box-shadow: 0 0 0 0 rgba(0, 255, 153, 0);
+            }
+        }
+        
+        /* تنظیمات برای صفحات کوچکتر و افقی */
+        @media (min-width: 600px) {
+            h1 {
+                font-size: 48px;
+            }
+            .start-prompt {
+                font-size: 18px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="loading-container" id="loading-container">
+        <!-- پرده‌های سیاه -->
+        <div class="curtain" id="top-curtain"></div>
+        <div class="curtain" id="bottom-curtain"></div>
+
+        <!-- محتوای اصلی -->
+        <div class="content">
+            <h1 id="game-title"></h1>
+            <p class="start-prompt" id="start-prompt">
+                <span class="click-indicator"></span>
+                برای شروع کلیک کنید
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingContainer = document.getElementById('loading-container');
+            const gameTitleElement = document.getElementById('game-title');
+            const startPromptElement = document.getElementById('start-prompt');
+            const titleText = 'Demur';
+            let charIndex = 0;
+
+            // تابع برای افکت تایپ کردن
+            function typeWriter() {
+                if (charIndex < titleText.length) {
+                    gameTitleElement.innerHTML += titleText.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeWriter, 200); // سرعت تایپ (میلی‌ثانیه)
+                } else {
+                    // وقتی تایپ تمام شد، خط چشمک‌زن را ثابت می‌کنیم
+                    gameTitleElement.style.borderRight = 'none';
+                    // نمایش متن "برای شروع کلیک کنید"
+                    startPromptElement.classList.add('visible');
+                    // فعال کردن قابلیت کلیک برای رفتن به مرحله بعد
+                    loadingContainer.style.cursor = 'pointer';
+                    loadingContainer.addEventListener('click', () => {
+                        // در بازی واقعی، اینجا کد انتقال به منوی اصلی قرار می‌گیرد
+                        alert('بازی شروع می‌شود!');
+                        // برای مثال، صفحه را محو می‌کنیم
+                        document.body.style.transition = 'opacity 1s';
+                        document.body.style.opacity = '0';
+                    });
+                }
+            }
+
+            // شروع انیمیشن‌ها با یک تاخیر کوتاه
+            setTimeout(() => {
+                // 1. باز شدن پرده‌ها
+                loadingContainer.classList.add('open');
+                
+                // 2. شروع تایپ بعد از اینکه پرده‌ها شروع به باز شدن کردند
+                setTimeout(typeWriter, 1500); // این تاخیر باید با انیمیشن CSS هماهنگ باشد
+
+            }, 500); // تاخیر اولیه برای نمایش صفحه سیاه
+        });
+    </部落>
+
+    </html>
