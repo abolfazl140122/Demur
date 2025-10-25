@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Demur - Loading Screen</title>
     <style>
-        /* تنظیمات کلی صفحه */
-        body, html {
+        /* تنظیمات اولیه و ریست کردن استایل‌ها */
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* جلوگیری از اسکرول */
-            background-color: #000;
-            font-family: Arial, sans-serif; /* یک فونت استاندارد */
+            box-sizing: border-box;
         }
 
-        /* контейнер اصلی لودینگ */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* کانتینر اصلی صفحه لودینگ */
         .loading-container {
             position: fixed;
             top: 0;
@@ -26,200 +30,214 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            background-color: #000;
-            z-index: 999;
+            background-color: transparent;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 1.5s ease-in-out;
         }
 
-        /* انیمیشن پرده‌ای */
+        /* پرده‌های سیاه که از وسط باز می‌شوند */
         .curtain {
             position: absolute;
             width: 100%;
             height: 50%;
-            background-color: #0a0a0a;
-            z-index: 1001;
-            transition: transform 1.5s cubic-bezier(0.86, 0, 0.07, 1); /* انیمیشن نرم برای باز شدن */
+            background-color: #0a0a0a; /* یک مشکی کمی ملایم‌تر */
+            z-index: 10;
+            transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
         }
 
         .curtain-top {
             top: 0;
+            transform-origin: top;
         }
 
         .curtain-bottom {
             bottom: 0;
+            transform-origin: bottom;
         }
 
-        /* حالت باز شده پرده‌ها */
-        .loading-container.start .curtain-top {
-            transform: translateY(-100%);
+        /* انیمیشن باز شدن پرده‌ها */
+        .curtains-open .curtain-top {
+            transform: scaleY(0);
         }
 
-        .loading-container.start .curtain-bottom {
-            transform: translateY(100%);
+        .curtains-open .curtain-bottom {
+            transform: scaleY(0);
         }
 
-        /* محتوای اصلی که در مرکز قرار می‌گیرد */
+        /* محتوایی که پس از باز شدن پرده‌ها نمایش داده می‌شود */
         .content {
             text-align: center;
+            color: white;
+            z-index: 5;
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity 1s ease, transform 1s ease;
-            transition-delay: 1.5s; /* تاخیر برای نمایش بعد از باز شدن پرده */
-            z-index: 1000;
+            transition: opacity 0.8s ease-out 0.5s, transform 0.8s ease-out 0.5s;
         }
 
-        .loading-container.start .content {
+        .content-visible .content {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* استایل عنوان اصلی بازی "Demur" */
-        h1 {
-            color: #e0e0e0;
-            font-size: 15vw; /* اندازه وابسته به عرض صفحه */
+        /* استایل عنوان بازی "Demur" */
+        .game-title {
+            font-size: clamp(3.5rem, 18vw, 7rem); /* فونت واکنش‌گرا برای هر دستگاهی */
             font-weight: bold;
-            letter-spacing: 5px;
-            margin: 0;
-            padding: 0;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            color: #e9e9e9;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.15),
+                         0 0 25px rgba(255, 255, 255, 0.1);
             position: relative;
+            display: inline-block;
+            white-space: nowrap;
         }
         
-        /* استایل کاراکترها برای انیمیشن تایپ */
-        h1 span {
-            opacity: 0;
-            animation: fadeInChar 0.5s forwards;
-        }
-
-        @keyframes fadeInChar {
-            to {
-                opacity: 1;
-            }
-        }
-
-        /* متن "برای شروع کلیک کنید" */
-        .subtitle {
-            color: #888;
-            font-size: 4vw;
-            margin-top: 20px;
+        /* کانتینر برای نگه داشتن عنوان در مرکز هنگام تایپ شدن */
+        .title-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            opacity: 0; /* در ابتدا مخفی */
-            animation: fadeInSubtitle 2s ease forwards;
-            animation-delay: 3s; /* تاخیر برای نمایش بعد از تایپ عنوان */
+            min-height: 120px;
+            margin-bottom: 25px;
         }
 
-        @keyframes fadeInSubtitle {
-            to {
-                opacity: 1;
-            }
+        /* انیمیشن تایپ گرافیکی و حرفه‌ای */
+        .game-title span {
+            opacity: 0;
+            animation: fadeInChar 0.8s forwards;
         }
 
-        /* نشانگر کلیک انیمیشنی */
-        .click-indicator {
-            width: 10px;
-            height: 10px;
-            background-color: rgba(100, 255, 150, 0.7);
-            border-radius: 50%;
-            margin-right: 15px; /* فاصله از متن */
-            box-shadow: 0 0 10px rgba(100, 255, 150, 0.8), 0 0 20px rgba(100, 255, 150, 0.6);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
+        @keyframes fadeInChar {
             0% {
-                transform: scale(0.9);
-                opacity: 0.7;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 1;
+                opacity: 0;
+                transform: translateY(-20px) scale(1.2);
+                text-shadow: 0 0 30px rgba(0, 255, 127, 0.5);
             }
             100% {
-                transform: scale(0.9);
-                opacity: 0.7;
-            }
-        }
-        
-        /* تنظیمات برای صفحه‌های عریض‌تر (افقی) */
-        @media (min-width: 600px) {
-            h1 {
-                font-size: 80px;
-            }
-            .subtitle {
-                font-size: 24px;
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
             }
         }
 
+        /* استایل متن "برای شروع کلیک کنید" */
+        .start-prompt {
+            direction: rtl;
+            font-size: clamp(1rem, 4vw, 1.25rem);
+            color: #a0a0a0;
+            cursor: pointer;
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* فاصله بیشتر بین متن و دایره */
+            letter-spacing: 0.5px;
+            opacity: 0;
+            animation: fadeInPrompt 1s forwards;
+            animation-delay: 2.5s; /* تاخیر تا بعد از اتمام تایپ */
+        }
+
+        @keyframes fadeInPrompt {
+            to { opacity: 1; }
+        }
+
+        /* نشانگر کلیک انیمیشنی و جذاب */
+        .click-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: rgba(46, 204, 113, 0.3);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+        }
+
+        .click-indicator::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+
+        /* انیمیشن تپش برای نشانگر */
+        @keyframes pulse {
+            0% {
+                transform: scale(0.7);
+                opacity: 0.9;
+            }
+            70% {
+                transform: scale(1.4);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="loading-container" id="loadingContainer">
-        <!-- پرده‌های بالا و پایین -->
+    <div class="loading-container" id="loading-screen">
+        <!-- پرده‌های سیاه -->
         <div class="curtain curtain-top"></div>
         <div class="curtain curtain-bottom"></div>
 
         <!-- محتوای اصلی -->
         <div class="content">
-            <h1 id="gameTitle"></h1>
-            <div class="subtitle">
-                <div class="click-indicator"></div>
-                <span>برای شروع کلیک کنید</span>
+            <div class="title-container">
+                <h1 class="game-title" id="game-title"></h1>
             </div>
+            <p class="start-prompt" id="start-prompt">
+                برای شروع کلیک کنید
+                <span class="click-indicator"></span>
+            </p>
         </div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const loadingContainer = document.getElementById('loadingContainer');
-            const gameTitleElement = document.getElementById('gameTitle');
-            const title = "Demur";
-            let charIndex = 0;
-            
-            // شروع انیمیشن باز شدن پرده
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const gameTitleElement = document.getElementById('game-title');
+            const startPrompt = document.getElementById('start-prompt');
+            const titleText = "Demur";
+            const typingSpeed = 300; // سرعت تایپ (عدد بالاتر برای سرعت کمتر و حس سنگین‌تر)
+
+            // ۱. شروع انیمیشن باز شدن پرده‌ها با کمی تاخیر
             setTimeout(() => {
-                loadingContainer.classList.add('start');
-            }, 100);
+                loadingScreen.classList.add('curtains-open');
+                loadingScreen.classList.add('content-visible');
+            }, 500);
 
-            // تابع برای انیمیشن تایپ حرفه‌ای
-            function typeWriter() {
-                if (charIndex < title.length) {
-                    // هر حرف را در یک تگ span قرار می‌دهیم تا انیمیشن مستقل داشته باشد
-                    const span = document.createElement('span');
-                    span.textContent = title.charAt(charIndex);
-                    // تاخیر انیمیشن برای هر حرف
-                    span.style.animationDelay = `${charIndex * 0.3}s`;
-                    gameTitleElement.appendChild(span);
-                    charIndex++;
-                }
-            }
-
-            // تاخیر برای شروع تایپ بعد از باز شدن پرده
+            // ۲. شروع انیمیشن تایپ پس از باز شدن پرده‌ها
             setTimeout(() => {
-                // حروف را یکی یکی اضافه می‌کنیم تا انیمیشن تایپ شکل بگیرد
-                for(let i = 0; i < title.length; i++) {
-                     const span = document.createElement('span');
-                     span.textContent = title.charAt(i);
-                     // تاخیر انیمیشن برای هر حرف. هر حرف کمی بعد از قبلی ظاهر می‌شود
-                     span.style.animationDelay = `${1.5 + i * 0.25}s`;
-                     gameTitleElement.appendChild(span);
+                let charIndex = 0;
+                function type() {
+                    if (charIndex < titleText.length) {
+                        const span = document.createElement('span');
+                        span.textContent = titleText.charAt(charIndex);
+                        // اعمال تاخیر متفاوت برای هر حرف جهت ایجاد حس گرافیکی‌تر
+                        span.style.animationDelay = `${charIndex * 0.15}s`;
+                        gameTitleElement.appendChild(span);
+                        charIndex++;
+                        setTimeout(type, typingSpeed);
+                    }
                 }
-            }, 500); // 500 میلی‌ثانیه بعد از شروع انیمیشن پرده
+                type();
+            }, 1200); // شروع تایپ ۱.۲ ثانیه پس از بارگذاری صفحه
 
-            // افزودن قابلیت کلیک برای رفتن به مرحله بعد
-            // بعد از پایان همه انیمیشن‌ها، صفحه محو می‌شود
-            window.addEventListener('click', function() {
-                loadingContainer.style.transition = 'opacity 1s ease';
-                loadingContainer.style.opacity = '0';
-
-                // بعد از محو شدن، می‌توانید کاربر را به صفحه اصلی بازی هدایت کنید
-                // یا عنصر لودینگ را به طور کامل حذف کنید
+            // ۳. افزودن رویداد کلیک برای محو شدن صفحه لودینگ
+            startPrompt.addEventListener('click', () => {
+                loadingScreen.style.opacity = '0';
+                // حذف کامل صفحه لودینگ از صفحه بعد از اتمام انیمیشن محو شدن
                 setTimeout(() => {
-                    loadingContainer.style.display = 'none';
-                    // window.location.href = 'your-game-url.html'; // خطی برای انتقال به صفحه بعد
-                }, 1000);
+                    loadingScreen.remove();
+                }, 1500); // این زمان باید با زمان transition در CSS برابر باشد
             });
         });
     </script>
