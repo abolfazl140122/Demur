@@ -182,12 +182,6 @@
     </style>
 </head>
 <body>
-    
-    <!-- عنصر صوتی برای افکت باز شدن پرده -->
-    <audio id="curtain-sound" preload="auto">
-        <source src="https://github.com/abolfazl140122/Demur/raw/10812f4ec2bda6b6eb22e7ac4ce93482cb021a10/%D8%A8%D8%A7%D8%B2%20%D8%B4%D8%AF%D9%86%20%D8%AF%D9%88%D8%AA%D8%A7%20%D8%B3%DB%8C%D8%A7%D9%87%DB%8C%DB%8C%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
 
     <div class="loading-container" id="loading-screen">
         <!-- پرده‌های سیاه -->
@@ -211,31 +205,39 @@
             const loadingScreen = document.getElementById('loading-screen');
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
-            const curtainSound = document.getElementById('curtain-sound'); // انتخاب عنصر صوتی
             const titleText = "Demur";
-            const typingSpeed = 300; // سرعت تایپ (عدد بالاتر برای سرعت کمتر و حس سنگین‌تر)
+            const typingSpeed = 300; // سرعت تایپ
 
-            // ۱. شروع انیمیشن باز شدن پرده‌ها و پخش صدا با کمی تاخیر
+            // --- تغییرات کلیدی برای هماهنگی صدا ---
+
+            // ۱. تعریف آبجکت صدا در ابتدا
+            // نکته: برای اطمینان از پخش، از لینک مستقیم (Raw) فایل صوتی استفاده شده است.
+            const curtainSoundURL = "https://media.githubusercontent.com/media/abolfazl140122/Demur/10812f4ec2bda6b6eb22e7ac4ce93482cb021a10/%D8%A8%D8%A7%D8%B2%20%D8%B4%D8%AF%D9%86%20%D8%AF%D9%88%D8%AA%D8%A7%20%D8%B3%DB%8C%D8%A7%D9%87%DB%8C%DB%8C%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF.mp3";
+            const curtainAudio = new Audio(curtainSoundURL);
+            curtainAudio.preload = 'auto'; // به مرورگر می‌گوید که صدا را زودتر بارگذاری کند
+
+            // ۲. شروع انیمیشن و پخش همزمان صدا
             setTimeout(() => {
+                // این دو خط انیمیشن CSS را فعال می‌کنند
                 loadingScreen.classList.add('curtains-open');
                 loadingScreen.classList.add('content-visible');
-                
-                // پخش افکت صوتی همزمان با انیمیشن
-                curtainSound.play().catch(error => {
-                    // در صورت بلاک شدن autoplay توسط مرورگر، این بخش اجرا می‌شود
-                    console.warn("Autoplay was prevented by the browser.");
+
+                // این خط صدا را دقیقاً در همان لحظه پخش می‌کند
+                curtainAudio.play().catch(error => {
+                    // این بخش برای مدیریت خطاهایی است که مرورگرها برای پخش خودکار صدا ایجاد می‌کنند
+                    console.error("Audio playback failed:", error);
+                    // در برخی مرورگرها، صدا فقط پس از اولین تعامل کاربر (مثل کلیک) پخش می‌شود.
                 });
 
             }, 500);
 
-            // ۲. شروع انیمیشن تایپ پس از باز شدن پرده‌ها
+            // ۳. شروع انیمیشن تایپ پس از باز شدن پرده‌ها
             setTimeout(() => {
                 let charIndex = 0;
                 function type() {
                     if (charIndex < titleText.length) {
                         const span = document.createElement('span');
                         span.textContent = titleText.charAt(charIndex);
-                        // اعمال تاخیر متفاوت برای هر حرف جهت ایجاد حس گرافیکی‌تر
                         span.style.animationDelay = `${charIndex * 0.15}s`;
                         gameTitleElement.appendChild(span);
                         charIndex++;
@@ -243,15 +245,14 @@
                     }
                 }
                 type();
-            }, 1200); // شروع تایپ ۱.۲ ثانیه پس از بارگذاری صفحه
+            }, 1200);
 
-            // ۳. افزودن رویداد کلیک برای محو شدن صفحه لودینگ
+            // ۴. افزودن رویداد کلیک برای محو شدن صفحه لودینگ
             startPrompt.addEventListener('click', () => {
                 loadingScreen.style.opacity = '0';
-                // حذف کامل صفحه لودینگ از صفحه بعد از اتمام انیمیشن محو شدن
                 setTimeout(() => {
                     loadingScreen.remove();
-                }, 1500); // این زمان باید با زمان transition در CSS برابر باشد
+                }, 1500);
             });
         });
     </script>
