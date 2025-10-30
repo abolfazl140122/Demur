@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Demur - Loading Screen</title>
+    <!-- ایمپورت کردن کتابخانه model-viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -43,6 +45,28 @@
         .click-indicator { width: 14px; height: 14px; border-radius: 50%; background-color: rgba(46, 204, 113, 0.3); position: relative; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3); }
         .click-indicator::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: #2ecc71; animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1); }
         @keyframes pulse { 0% { transform: scale(0.7); opacity: 0.9; } 70% { transform: scale(1.4); opacity: 0; } 100% { transform: scale(0.7); opacity: 0; } }
+        
+        /* استایل‌های جدید برای نمایشگر مدل سه‌بعدی */
+        #model-viewer-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9998; /* پایین‌تر از لودینگ */
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none; /* برای عدم دریافت کلیک تا زمان فعال شدن */
+        }
+        #model-viewer-container.visible {
+            opacity: 1;
+            pointer-events: auto; /* فعال کردن تعامل با مدل */
+        }
+        model-viewer {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
@@ -51,17 +75,14 @@
         <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
-
-    <!-- صداهای جدید اضافه شده -->
     <audio id="typing-finished-sound" preload="auto">
         <source src="https://github.com/abolfazl140122/Demur/raw/15db07d5cebb23d3a36c454524de0dee514e881f/%D8%AF%D9%85%D9%88%D8%B1.wav" type="audio/wav">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
-
     <audio id="intro-voice" preload="auto">
         <source src="https://github.com/abolfazl140122/Demur/raw/15db07d5cebb23d3a36c454524de0dee514e881f/%D8%A7%D8%B3%DA%A9%D9%88%D8%B1%D8%AA%20%DA%AF%DB%8C%D9%85%20%D8%A8%D8%A7%20%D8%A7%D9%81%D8%AA%D8%AE%D8%A7%D8%B1%20%D8%AA%D9%82%D8%AF%DB%8C%D9%85%20%D9%85%DB%8C%DA%A9%D9%86%D8%AF.wav" type="audio/wav">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
-    </audio>
+    </-audio>
 
     <div class="loading-container" id="loading-screen">
         <div class="curtain curtain-top"></div>
@@ -77,16 +98,30 @@
         </div>
     </div>
 
+    <!-- تگ جدید برای نمایش مدل سه‌بعدی -->
+    <div id="model-viewer-container">
+        <model-viewer 
+            src="https://raw.githubusercontent.com/abolfazl140122/Demur/a508dab5bf01b3f7dad33d5468e5c4b3ce1ba9de/%D9%85%D8%AF%D9%84%20%D9%85%D8%A7%D8%B4%DB%8C%D9%86%20%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D9%87%20%D8%AA%D8%B3%D8%AA%DB%8C.glb"
+            alt="A 3D model of a car"
+            ar
+            camera-controls
+            auto-rotate
+            environment-image="neutral"
+            shadow-intensity="1">
+        </model-viewer>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const loadingScreen = document.getElementById('loading-screen');
             const gameTitleElement = document.getElementById('game-title');
             const startPrompt = document.getElementById('start-prompt');
             const backgroundMusic = document.getElementById('background-music');
-            
-            // --- شروع تغییرات ---
             const typingSound = document.getElementById('typing-finished-sound');
             const introVoice = document.getElementById('intro-voice');
+            
+            // --- تغییرات جدید ---
+            const modelViewerContainer = document.getElementById('model-viewer-container');
             // --- پایان تغییرات ---
 
             const titleText = "Demur";
@@ -105,11 +140,9 @@
 
             function handleFirstInteraction() {
                 playMusic(backgroundMusic);
-                // پس از اولین تعامل کاربر، دیگر نیازی به این event listener نیست
                 document.body.removeEventListener('click', handleFirstInteraction);
             }
 
-            // تلاش برای پخش خودکار موسیقی پس‌زمینه
             const playPromise = backgroundMusic.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
@@ -137,12 +170,9 @@
                         charIndex++;
                         setTimeout(type, typingSpeed);
                     } else {
-                        // --- شروع تغییرات ---
-                        // انیمیشن تایپ تمام شده، صدای اول را پخش کن
                         setTimeout(() => {
                            playMusic(typingSound);
-                        }, 200); // یک تاخیر کوتاه برای هماهنگی بهتر
-                        // --- پایان تغییرات ---
+                        }, 200);
                     }
                 }
                 type();
@@ -153,20 +183,27 @@
 
             }, startTypingDelay);
 
-            // --- شروع تغییرات ---
-            // وقتی صدای اول تمام شد، صدای دوم را پخش کن
             typingSound.addEventListener('ended', () => {
                 playMusic(introVoice);
             });
-            // --- پایان تغییرات ---
 
+            // --- تغییرات در رویداد کلیک ---
             startPrompt.addEventListener('click', () => {
-                // با کلیک کاربر، تمام صداها را متوقف کرده و صفحه را محو می‌کنیم
+                // متوقف کردن صداها
                 backgroundMusic.pause();
                 typingSound.pause();
                 introVoice.pause();
 
+                // محو کردن صفحه لودینگ
                 loadingScreen.style.opacity = '0';
+
+                // نمایش دادن نمایشگر مدل سه‌بعدی
+                modelViewerContainer.classList.add('visible');
+                
+                // توقف انیمیشن پس‌زمینه
+                document.body.classList.remove('start-animation');
+
+                // حذف کامل صفحه لودینگ پس از اتمام انیمیشن محو شدن
                 setTimeout(() => {
                     loadingScreen.remove();
                 }, 1500);
