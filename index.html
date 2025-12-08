@@ -403,7 +403,7 @@
             50% { transform: translate(-0.3px, -0.3px) rotate(-0.07deg); }
             60% { transform: translate(0.3px, 0.3px) rotate(0.07deg); }
             70% { transform: translate(-0.3px, 0.3px) rotate(-0.03deg); }
-            80% { transform: translate(0.3px, -0.3px) rotate(0.03deg); }
+            80% { transform: translate(0.3px, -0.5px) rotate(0.03deg); }
             90% { transform: translate(-0.2px, -0.2px) rotate(-0.05deg); }
         }
         
@@ -478,6 +478,109 @@
         @keyframes fadeInSubtitle {
             to { opacity: 1; }
         }
+        
+        /* انیمیشن‌های انتقال حرفه‌ای */
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        
+        .transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .transition-content {
+            text-align: center;
+            color: white;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 1s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        
+        .transition-overlay.active .transition-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .transition-title {
+            font-size: 4rem;
+            color: #2ecc71;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.7);
+            letter-spacing: 3px;
+        }
+        
+        .transition-subtitle {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin-bottom: 50px;
+        }
+        
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(46, 204, 113, 0.2);
+            border-top: 5px solid #2ecc71;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* افکت‌های ویژه انتقال */
+        .transition-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* پرده‌های انتقال */
+        .transition-curtain {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background-color: #0a0a0a;
+            z-index: 10000;
+            transform: scaleY(0);
+            transition: transform 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        
+        .transition-curtain-top {
+            top: 0;
+            transform-origin: top;
+            background: linear-gradient(to bottom, #000, #0a0a0a);
+        }
+        
+        .transition-curtain-bottom {
+            bottom: 0;
+            transform-origin: bottom;
+            background: linear-gradient(to top, #000, #0a0a0a);
+        }
+        
+        .transition-active .transition-curtain-top,
+        .transition-active .transition-curtain-bottom {
+            transform: scaleY(1);
+        }
     </style>
     <!-- کتابخانه Particles.js برای افکت ذرات -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
@@ -502,6 +605,12 @@
     <!-- صداهای اضافی برای تجربه غنی‌تر -->
     <audio id="hover-sound" preload="auto">
         <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+
+    <!-- صداهای انتقال -->
+    <audio id="transition-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-whoosh-flashback-1155.mp3" type="audio/mpeg">
         مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
     </audio>
 
@@ -540,6 +649,19 @@
             <div class="hint-text">آماده‌ای برای مواجهه با ناشناخته‌ها؟</div>
         </div>
     </div>
+    
+    <!-- پرده‌های انتقال -->
+    <div class="transition-curtain transition-curtain-top"></div>
+    <div class="transition-curtain transition-curtain-bottom"></div>
+    
+    <!-- لایه انتقال -->
+    <div class="transition-overlay" id="transition-overlay">
+        <div class="transition-content">
+            <h2 class="transition-title">در حال انتقال...</h2>
+            <p class="transition-subtitle">آماده‌ای برای ورود به دنیای Demur؟</p>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -552,6 +674,10 @@
             const typingSound = document.getElementById('typing-finished-sound');
             const introVoice = document.getElementById('intro-voice');
             const hoverSound = document.getElementById('hover-sound');
+            const transitionSound = document.getElementById('transition-sound');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            const transitionCurtainTop = document.querySelector('.transition-curtain-top');
+            const transitionCurtainBottom = document.querySelector('.transition-curtain-bottom');
 
             const titleText = "DEMUR";
             const typingSpeed = 200;
@@ -692,31 +818,110 @@
                 playMusic(hoverSound);
             });
             
-            // کلیک برای شروع بازی
-            startPrompt.addEventListener('click', () => {
+            // تابع ایجاد ذرات انتقال
+            function createTransitionParticles() {
+                const particlesContainer = document.createElement('div');
+                particlesContainer.style.position = 'fixed';
+                particlesContainer.style.top = '0';
+                particlesContainer.style.left = '0';
+                particlesContainer.style.width = '100%';
+                particlesContainer.style.height = '100%';
+                particlesContainer.style.pointerEvents = 'none';
+                particlesContainer.style.zIndex = '10001';
+                document.body.appendChild(particlesContainer);
+                
+                // ایجاد 50 ذره
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('transition-particle');
+                    
+                    // موقعیت تصادفی
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    
+                    // اندازه تصادفی
+                    const size = Math.random() * 15 + 5;
+                    
+                    particle.style.left = `${x}%`;
+                    particle.style.top = `${y}%`;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.backgroundColor = `rgba(46, 204, 113, ${Math.random() * 0.5 + 0.3})`;
+                    particle.style.boxShadow = `0 0 ${size}px rgba(46, 204, 113, 0.7)`;
+                    
+                    particlesContainer.appendChild(particle);
+                    
+                    // انیمیشن ذره
+                    const animation = particle.animate([
+                        { 
+                            opacity: 0, 
+                            transform: 'translate(0, 0) scale(0)' 
+                        },
+                        { 
+                            opacity: 1, 
+                            transform: `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(1)` 
+                        },
+                        { 
+                            opacity: 0, 
+                            transform: `translate(${Math.random() * 400 - 200}px, ${Math.random() * 400 - 200}px) scale(0)` 
+                        }
+                    ], {
+                        duration: Math.random() * 1000 + 1000,
+                        delay: Math.random() * 500
+                    });
+                    
+                    // حذف ذره پس از انیمیشن
+                    animation.onfinish = () => {
+                        particle.remove();
+                    };
+                }
+                
+                // حذف کانتینر ذرات پس از اتمام
+                setTimeout(() => {
+                    particlesContainer.remove();
+                }, 2000);
+            }
+            
+            // تابع انتقال حرفه‌ای به صفحه اصلی
+            function transitionToMainPage() {
                 // متوقف کردن همه صداها
                 backgroundMusic.pause();
                 typingSound.pause();
                 introVoice.pause();
                 hoverSound.pause();
                 
-                // افکت خروج با انیمیشن
+                // پخش صدای انتقال
+                playMusic(transitionSound);
+                
+                // مخفی کردن محتوای لودینگ
                 loadingScreen.style.opacity = '0';
                 
-                // اضافه کردن افکت نهایی قبل از بسته شدن
-                document.body.style.overflow = 'auto';
+                // ایجاد افکت ذرات انتقال
+                createTransitionParticles();
                 
+                // نمایش پرده‌های انتقال
                 setTimeout(() => {
-                    loadingScreen.remove();
+                    document.body.classList.add('transition-active');
                     
-                    // نمایش پیام نهایی در کنسول (اختیاری)
-                    console.log("%cDemur World Loaded!", "color: #2ecc71; font-size: 24px; font-weight: bold;");
-                    console.log("%cآماده‌ای برای ماجراجویی؟", "color: #fff; font-size: 18px;");
-                    
-                    // اینجا می‌توانید کد انتقال به صفحه اصلی بازی را اضافه کنید
-                    // window.location.href = "main-game.html";
-                }, 1500);
-            });
+                    // نمایش لایه انتقال
+                    setTimeout(() => {
+                        transitionOverlay.classList.add('active');
+                        
+                        // انتقال به صفحه اصلی پس از تاخیر
+                        setTimeout(() => {
+                            // نمایش پیام نهایی در کنسول
+                            console.log("%cDemur World Loaded!", "color: #2ecc71; font-size: 24px; font-weight: bold;");
+                            console.log("%cدر حال انتقال به صفحه اصلی...", "color: #fff; font-size: 18px;");
+                            
+                            // انتقال به صفحه main.html
+                            window.location.href = "main.html";
+                        }, 2500); // زمان برای نمایش صفحه انتقال
+                    }, 800); // تاخیر قبل از نمایش لایه انتقال
+                }, 500); // تاخیر قبل از نمایش پرده‌ها
+            }
+            
+            // کلیک برای شروع بازی
+            startPrompt.addEventListener('click', transitionToMainPage);
             
             // اضافه کردن کنترل صدا با کلید Space
             document.addEventListener('keydown', (e) => {
@@ -731,7 +936,13 @@
                 
                 // تست: کلیک با کلید Enter
                 if (e.code === 'Enter' && progress >= maxProgress) {
-                    startPrompt.click();
+                    transitionToMainPage();
+                }
+                
+                // انتقال مستقیم با کلید T (برای تست)
+                if (e.code === 'KeyT' && e.ctrlKey) {
+                    console.log("انتقال سریع با Ctrl+T");
+                    transitionToMainPage();
                 }
             });
             
@@ -744,10 +955,24 @@
                 if (titleProgress >= 100) {
                     clearInterval(titleInterval);
                     setTimeout(() => {
-                        document.title = "Demur - Ready";
+                        document.title = "Demur - Ready to Enter";
                     }, 1000);
                 }
             }, 150);
+            
+            // پیش‌لود کردن صفحه main.html برای انتقال سریع‌تر
+            function preloadMainPage() {
+                // ایجاد یک iframe نامرئی برای پیش‌لود کردن صفحه
+                const preloadFrame = document.createElement('iframe');
+                preloadFrame.style.display = 'none';
+                preloadFrame.src = 'main.html';
+                document.body.appendChild(preloadFrame);
+                
+                console.log("صفحه اصلی در حال پیش‌لود شدن...");
+            }
+            
+            // پیش‌لود صفحه اصلی پس از اتمام لودینگ
+            setTimeout(preloadMainPage, 3000);
         });
     </script>
 </body>
