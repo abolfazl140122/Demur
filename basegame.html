@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Demur - بازی اصلی دو بعدی</title>
+    <title>Demur - آزمون روانشناسی عمیق</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,8 +15,6 @@
             font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
             color: #f0f0f0;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
         }
         
         @font-face {
@@ -79,538 +77,505 @@
             display: none;
         }
         
-        /* کانواس بازی */
-        #game-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* صفحه آزمون */
+        .exam-container {
+            position: relative;
             width: 100%;
             height: 100%;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         
-        /* HUD بازی */
-        .hud {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
+        /* هدر آزمون */
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 15px;
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            backdrop-filter: blur(10px);
         }
         
-        /* سلامت و وضعیت */
-        .health-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        .exam-title {
+            font-size: 1.8rem;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .exam-stats {
+            display: flex;
+            gap: 30px;
+            color: #ccc;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-icon {
+            color: #2ecc71;
+        }
+        
+        /* نوار پیشرفت */
+        .progress-container {
             background: rgba(10, 10, 10, 0.8);
             padding: 15px 25px;
             border-radius: 15px;
             border: 2px solid rgba(46, 204, 113, 0.3);
-            min-width: 200px;
             backdrop-filter: blur(10px);
         }
         
-        .health-bar-hud {
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+        
+        .progress-bar {
             width: 100%;
             height: 12px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 6px;
             overflow: hidden;
-            margin-bottom: 8px;
         }
         
-        .health-fill {
+        .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #e74c3c, #2ecc71);
+            background: linear-gradient(90deg, #2ecc71, #1abc9c);
             border-radius: 6px;
             transition: width 0.5s ease;
+            width: 0%;
         }
         
-        .health-text {
+        /* بخش سوال */
+        .question-container {
+            flex: 1;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+        }
+        
+        .question-header {
             display: flex;
             justify-content: space-between;
-            font-size: 0.9rem;
-            color: #ccc;
+            align-items: flex-start;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.2);
         }
         
-        /* منابع */
-        .resources {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(10, 10, 10, 0.8);
-            padding: 15px 25px;
-            border-radius: 15px;
-            border: 2px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        .resource-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            color: #ccc;
-        }
-        
-        .resource-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .resource-icon {
-            color: #2ecc71;
-            width: 20px;
-            text-align: center;
-        }
-        
-        /* دکمه‌های کنترلی */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            display: flex;
-            gap: 15px;
-        }
-        
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(20, 20, 20, 0.8);
-            border: 2px solid rgba(46, 204, 113, 0.3);
-            color: #2ecc71;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            pointer-events: auto;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .control-btn:active {
-            transform: scale(0.9);
-            background: rgba(46, 204, 113, 0.2);
-        }
-        
-        .control-btn:hover {
-            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
-        }
-        
-        /* دکمه‌های مهارت */
-        .skills {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-        }
-        
-        .skill-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: rgba(20, 20, 20, 0.8);
-            border: 2px solid rgba(46, 204, 113, 0.3);
-            color: #2ecc71;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .question-number {
             font-size: 1.2rem;
-            cursor: pointer;
-            pointer-events: auto;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-            position: relative;
-        }
-        
-        .skill-btn.cooldown {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .skill-btn .cooldown-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(46, 204, 113, 0.5);
-            border-radius: 0 0 8px 8px;
-        }
-        
-        /* دیالوگ */
-        .dialog-box {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 800px;
-            background: rgba(10, 10, 10, 0.9);
-            border-radius: 15px;
-            padding: 25px;
-            border: 3px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(15px);
-            display: none;
-            pointer-events: auto;
-        }
-        
-        .dialog-title {
             color: #2ecc71;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: bold;
         }
         
-        .dialog-text {
-            color: #ccc;
-            line-height: 1.6;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-        }
-        
-        .dialog-options {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .dialog-option {
-            padding: 10px 20px;
-            background: rgba(30, 30, 30, 0.8);
-            border: 1px solid rgba(46, 204, 113, 0.2);
-            border-radius: 8px;
-            color: #ccc;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .dialog-option:hover {
-            background: rgba(46, 204, 113, 0.2);
-            color: #fff;
-        }
-        
-        /* موجودیت */
-        .inventory-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 600px;
-            background: rgba(10, 10, 10, 0.95);
+        .question-category {
+            background: rgba(46, 204, 113, 0.1);
+            padding: 5px 15px;
             border-radius: 20px;
-            padding: 30px;
-            border: 3px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(20px);
-            display: none;
-            pointer-events: auto;
-            z-index: 200;
-        }
-        
-        .inventory-title {
             color: #2ecc71;
-            font-size: 1.8rem;
-            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        
+        .question-text {
+            font-size: 1.5rem;
+            line-height: 1.7;
+            color: #f0f0f0;
             text-align: center;
+            padding: 20px 0;
         }
         
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .inventory-slot {
-            aspect-ratio: 1;
+        .question-hint {
             background: rgba(30, 30, 30, 0.7);
+            padding: 15px;
             border-radius: 10px;
-            border: 2px solid rgba(46, 204, 113, 0.2);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            padding: 10px;
+            border-right: 3px solid #2ecc71;
+            color: #aaa;
+            font-size: 0.95rem;
+            margin-top: 10px;
         }
         
-        .inventory-slot:hover {
+        /* گزینه‌ها */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .option-btn {
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid rgba(46, 204, 113, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            color: #ccc;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: right;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn:hover {
             background: rgba(46, 204, 113, 0.1);
             border-color: rgba(46, 204, 113, 0.5);
+            transform: translateX(-5px);
         }
         
-        .inventory-slot.filled {
+        .option-btn.selected {
+            background: rgba(46, 204, 113, 0.15);
             border-color: #2ecc71;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
         }
         
-        .item-icon {
-            font-size: 1.8rem;
-            color: #2ecc71;
-            margin-bottom: 8px;
-        }
-        
-        .item-name {
-            font-size: 0.8rem;
-            color: #ccc;
-            text-align: center;
-        }
-        
-        /* پنل مهارت */
-        .skills-panel {
+        .option-label {
             position: absolute;
+            left: 20px;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 700px;
-            background: rgba(10, 10, 10, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            border: 3px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(20px);
-            display: none;
-            pointer-events: auto;
-            z-index: 200;
-        }
-        
-        .skill-node {
-            display: inline-block;
-            width: 80px;
-            height: 80px;
+            transform: translateY(-50%);
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
-            background: rgba(30, 30, 30, 0.8);
-            border: 3px solid rgba(46, 204, 113, 0.3);
-            margin: 15px;
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid #2ecc71;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        /* دکمه‌های ناوبری */
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .nav-btn {
+            padding: 15px 35px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
         }
         
-        .skill-node.unlocked {
-            border-color: #2ecc71;
-            background: rgba(46, 204, 113, 0.1);
-            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+        .nav-prev {
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
         }
         
-        .skill-node.locked {
+        .nav-next {
+            background: linear-gradient(90deg, #2ecc71, #1abc9c);
+            color: #000;
+            border: 2px solid #2ecc71;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .nav-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* صفحه نتایج */
+        .results-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            z-index: 1000;
+            display: none;
+            overflow-y: auto;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .results-content {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(15, 15, 15, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            border: 3px solid rgba(46, 204, 113, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .results-title {
+            font-size: 2.5rem;
+            color: #2ecc71;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+        
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .result-card {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            border-color: #2ecc71;
+        }
+        
+        .result-icon {
+            font-size: 2.5rem;
+            color: #2ecc71;
+            margin-bottom: 15px;
+        }
+        
+        .result-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin: 10px 0;
+        }
+        
+        .result-label {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .analysis-section {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 5px solid #2ecc71;
+        }
+        
+        .analysis-title {
+            font-size: 1.8rem;
+            color: #2ecc71;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .analysis-text {
+            color: #ccc;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        
+        .personality-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .trait-badge {
+            background: linear-gradient(45deg, #2ecc71, #1abc9c);
+            color: #000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .results-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .action-btn {
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+            justify-content: center;
+        }
+        
+        .action-btn-primary {
+            background: linear-gradient(90deg, #2ecc71, #1abc9c);
+            color: #000;
+        }
+        
+        .action-btn-secondary {
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        /* تایمر */
+        .timer-container {
+            background: rgba(10, 10, 10, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .timer-icon {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         /* منوی پاوز */
         .pause-menu {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 500px;
-            background: rgba(10, 10, 10, 0.97);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .pause-content {
+            background: rgba(15, 15, 15, 0.95);
             border-radius: 20px;
             padding: 40px;
             border: 3px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(25px);
-            display: none;
-            pointer-events: auto;
-            z-index: 300;
+            width: 90%;
+            max-width: 500px;
             text-align: center;
-        }
-        
-        .pause-title {
-            color: #2ecc71;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-        }
-        
-        .pause-options {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .pause-option {
-            padding: 15px;
-            background: rgba(30, 30, 30, 0.8);
-            border: 1px solid rgba(46, 204, 113, 0.2);
-            border-radius: 10px;
-            color: #ccc;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .pause-option:hover {
-            background: rgba(46, 204, 113, 0.2);
-            color: #fff;
-            transform: translateY(-3px);
-        }
-        
-        /* نوار پیشرفت داستان */
-        .story-progress {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 600px;
-            background: rgba(10, 10, 10, 0.8);
-            border-radius: 15px;
-            padding: 15px 25px;
-            border: 2px solid rgba(46, 204, 113, 0.3);
-            backdrop-filter: blur(10px);
-            pointer-events: auto;
-        }
-        
-        .story-text {
-            color: #ccc;
-            font-size: 1rem;
-            margin-bottom: 10px;
-        }
-        
-        .story-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        .story-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #2ecc71, #1abc9c);
-            border-radius: 3px;
-            width: 20%;
         }
         
         /* اعلان */
         .notification {
-            position: absolute;
-            top: 100px;
+            position: fixed;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(10, 10, 10, 0.9);
-            padding: 15px 25px;
-            border-radius: 10px;
-            border: 2px solid rgba(46, 204, 113, 0.3);
-            color: #2ecc71;
-            font-size: 1rem;
-            display: none;
-            pointer-events: none;
-            z-index: 400;
-            backdrop-filter: blur(10px);
-            text-align: center;
-            max-width: 80%;
-        }
-        
-        /* پاپ آپ آسیب */
-        .damage-popup {
-            position: absolute;
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 1.2rem;
-            pointer-events: none;
-            z-index: 150;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-            animation: floatUp 1s forwards;
-        }
-        
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
-        
-        /* ترمینال */
-        .terminal {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 700px;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(10, 10, 10, 0.95);
+            padding: 15px 30px;
             border-radius: 10px;
             border: 2px solid #2ecc71;
-            font-family: monospace;
             color: #2ecc71;
+            font-size: 1rem;
             display: none;
-            pointer-events: auto;
-            z-index: 250;
-            overflow: hidden;
+            z-index: 3000;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.5s ease;
         }
         
-        .terminal-header {
-            background: #2ecc71;
-            color: #000;
-            padding: 10px 15px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .terminal-body {
-            padding: 20px;
-            height: 300px;
-            overflow-y: auto;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        
-        .terminal-input {
-            background: transparent;
-            border: none;
-            color: #2ecc71;
-            font-family: monospace;
-            font-size: 1rem;
-            width: 100%;
-            padding: 10px;
-            border-top: 1px solid #2ecc71;
-            outline: none;
+        @keyframes slideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
         }
         
         /* ریسپانسیو */
         @media (max-width: 768px) {
-            .controls {
-                bottom: 20px;
-                left: 20px;
+            .exam-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
             }
             
-            .skills {
-                bottom: 20px;
-                right: 20px;
+            .exam-stats {
+                justify-content: center;
+                flex-wrap: wrap;
             }
             
-            .health-container, .resources {
-                padding: 10px 15px;
-            }
-            
-            .control-btn {
-                width: 50px;
-                height: 50px;
+            .question-text {
                 font-size: 1.2rem;
             }
             
-            .skill-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
+            .option-btn {
+                padding: 15px 15px 15px 60px;
             }
             
-            .inventory-grid {
-                grid-template-columns: repeat(3, 1fr);
+            .option-label {
+                left: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+            
+            .navigation-buttons {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                width: 100%;
+            }
+            
+            .results-content {
+                padding: 20px;
+            }
+            
+            .results-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-actions {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
             }
         }
         
@@ -629,15 +594,37 @@
         }
         
         /* انیمیشن‌های ویژه */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* افکت انتخاب گزینه */
+        @keyframes selectPulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+        
+        .selected.pulse {
+            animation: selectPulse 1s;
+        }
+        
+        /* افکت نور پس‌زمینه */
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
     </style>
 </head>
@@ -648,253 +635,197 @@
         <div class="loading-bar">
             <div class="loading-progress" id="loading-progress"></div>
         </div>
-        <div class="loading-text" id="loading-text">در حال بارگذاری بازی...</div>
+        <div class="loading-text" id="loading-text">در حال بارگذاری آزمون...</div>
     </div>
     
     <!-- صفحه بازی -->
     <div id="game-container">
-        <canvas id="game-canvas"></canvas>
+        <!-- افکت نور پس‌زمینه -->
+        <div class="bg-glow"></div>
         
-        <!-- HUD -->
-        <div class="hud">
-            <!-- سلامت -->
-            <div class="health-container">
-                <div class="health-bar-hud">
-                    <div class="health-fill" id="health-fill" style="width: 85%;"></div>
-                </div>
-                <div class="health-text">
-                    <span>سلامت</span>
-                    <span id="health-text">85/100</span>
+        <!-- کانتینر آزمون -->
+        <div class="exam-container">
+            <!-- هدر آزمون -->
+            <div class="exam-header">
+                <div class="exam-title" id="exam-title">آزمون خودشناسی عمیق Demur</div>
+                <div class="exam-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-question-circle stat-icon"></i>
+                        <span id="current-question">0</span>/<span id="total-questions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock stat-icon"></i>
+                        <span id="timer">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-brain stat-icon"></i>
+                        <span id="depth-level">عمق: 0</span>
+                    </div>
                 </div>
             </div>
             
-            <!-- منابع -->
-            <div class="resources">
-                <div class="resource-item">
-                    <div class="resource-icon"><i class="fas fa-coins"></i></div>
-                    <div class="resource-value" id="gold-value">1250</div>
+            <!-- نوار پیشرفت -->
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span>پیشرفت آزمون</span>
+                    <span id="progress-percent">0%</span>
                 </div>
-                <div class="resource-item">
-                    <div class="resource-icon"><i class="fas fa-gem"></i></div>
-                    <div class="resource-value" id="crystal-value">45</div>
-                </div>
-                <div class="resource-item">
-                    <div class="resource-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="resource-value" id="energy-value">100/100</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
                 </div>
             </div>
             
-            <!-- دکمه‌های کنترلی -->
-            <div class="controls">
-                <div class="control-btn" id="inventory-btn">
-                    <i class="fas fa-backpack"></i>
+            <!-- بخش سوال -->
+            <div class="question-container">
+                <div class="question-header">
+                    <div class="question-number" id="question-number">سوال 1</div>
+                    <div class="question-category" id="question-category">روانشناسی تاریک</div>
                 </div>
-                <div class="control-btn" id="skills-btn">
-                    <i class="fas fa-fire-alt"></i>
+                
+                <div class="question-text" id="question-text">
+                    در حال بارگذاری سوال...
                 </div>
-                <div class="control-btn" id="pause-btn">
-                    <i class="fas fa-pause"></i>
+                
+                <div class="question-hint" id="question-hint">
+                    لطفاً با صداقت کامل پاسخ دهید. هیچ پاسخ درست یا غلطی وجود ندارد.
                 </div>
-            </div>
-            
-            <!-- دکمه‌های مهارت -->
-            <div class="skills">
-                <div class="skill-btn" id="skill1">
-                    <i class="fas fa-fist-raised"></i>
-                </div>
-                <div class="skill-btn" id="skill2">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="skill-btn" id="skill3">
-                    <i class="fas fa-magic"></i>
-                </div>
-                <div class="skill-btn" id="skill4">
-                    <i class="fas fa-heart"></i>
+                
+                <!-- گزینه‌ها -->
+                <div class="options-grid" id="options-container">
+                    <!-- گزینه‌ها توسط جاوااسکریپت اضافه می‌شوند -->
                 </div>
             </div>
             
-            <!-- نوار پیشرفت داستان -->
-            <div class="story-progress">
-                <div class="story-text" id="story-text">مأموریت: بررسی آزمایشگاه متروکه</div>
-                <div class="story-bar">
-                    <div class="story-fill" id="story-progress-bar"></div>
-                </div>
+            <!-- دکمه‌های ناوبری -->
+            <div class="navigation-buttons">
+                <button class="nav-btn nav-prev" id="prev-btn" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                    سوال قبلی
+                </button>
+                <button class="nav-btn nav-next" id="next-btn">
+                    سوال بعدی
+                    <i class="fas fa-arrow-left"></i>
+                </button>
             </div>
         </div>
-        
-        <!-- دیالوگ -->
-        <div class="dialog-box" id="dialog-box">
-            <div class="dialog-title">
-                <i class="fas fa-comment-alt"></i>
-                <span id="dialog-title">گفتگو</span>
-            </div>
-            <div class="dialog-text" id="dialog-text"></div>
-            <div class="dialog-options" id="dialog-options"></div>
-        </div>
-        
-        <!-- موجودیت -->
-        <div class="inventory-box" id="inventory-box">
-            <div class="inventory-title">موجودیت</div>
-            <div class="inventory-grid" id="inventory-grid">
-                <!-- توسط جاوااسکریپت پر می‌شود -->
-            </div>
-            <div style="text-align: center;">
-                <button class="pause-option" id="close-inventory">بستن</button>
-            </div>
-        </div>
-        
-        <!-- پنل مهارت -->
-        <div class="skills-panel" id="skills-panel">
-            <div class="inventory-title">مهارت‌ها</div>
-            <div id="skill-tree">
-                <!-- توسط جاوااسکریپت پر می‌شود -->
-            </div>
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="pause-option" id="close-skills">بستن</button>
-            </div>
-        </div>
-        
-        <!-- منوی پاوز -->
-        <div class="pause-menu" id="pause-menu">
-            <div class="pause-title">بازی متوقف شد</div>
-            <div class="pause-options">
-                <div class="pause-option" id="resume-btn">ادامه بازی</div>
-                <div class="pause-option" id="save-btn">ذخیره بازی</div>
-                <div class="pause-option" id="settings-btn">تنظیمات</div>
-                <div class="pause-option" id="quit-btn">خروج به منو</div>
-            </div>
-        </div>
-        
-        <!-- ترمینال -->
-        <div class="terminal" id="terminal">
-            <div class="terminal-header">
-                <span>Terminal v1.0</span>
-                <span id="close-terminal" style="cursor: pointer;">✕</span>
-            </div>
-            <div class="terminal-body" id="terminal-output">
-                > سیستم ترمینال فعال شد.<br>
-                > تاریخچه آزمایشگاه در حال بارگذاری...<br>
-                > فایل‌های محرمانه یافت شد.<br>
-                ><br>
-            </div>
-            <input type="text" class="terminal-input" id="terminal-input" placeholder="دستور را وارد کنید...">
-        </div>
-        
-        <!-- اعلان -->
-        <div class="notification" id="notification"></div>
     </div>
+    
+    <!-- صفحه نتایج -->
+    <div class="results-container" id="results-container">
+        <div class="results-content">
+            <div class="results-title">
+                <i class="fas fa-chart-line"></i>
+                نتایج آزمون شما
+            </div>
+            
+            <div class="results-summary" id="results-summary">
+                <!-- توسط جاوااسکریپت پر می‌شود -->
+            </div>
+            
+            <div class="analysis-section">
+                <div class="analysis-title">
+                    <i class="fas fa-user-psychologist"></i>
+                    تحلیل شخصیت
+                </div>
+                <div class="analysis-text" id="personality-analysis">
+                    در حال تحلیل نتایج...
+                </div>
+                
+                <div class="personality-traits" id="personality-traits">
+                    <!-- توسط جاوااسکریپت پر می‌شود -->
+                </div>
+            </div>
+            
+            <div class="results-actions">
+                <button class="action-btn action-btn-primary" id="restart-btn">
+                    <i class="fas fa-redo"></i>
+                    آزمون مجدد
+                </button>
+                <button class="action-btn action-btn-secondary" id="share-btn">
+                    <i class="fas fa-share"></i>
+                    اشتراک‌گذاری نتایج
+                </button>
+                <button class="action-btn action-btn-secondary" id="details-btn">
+                    <i class="fas fa-chart-bar"></i>
+                    جزئیات بیشتر
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- منوی پاوز -->
+    <div class="pause-menu" id="pause-menu">
+        <div class="pause-content">
+            <div class="results-title" style="font-size: 2rem; margin-bottom: 30px;">
+                <i class="fas fa-pause"></i>
+                آزمون متوقف شد
+            </div>
+            <div class="pause-options">
+                <button class="action-btn action-btn-primary" id="resume-btn" style="margin-bottom: 15px;">
+                    ادامه آزمون
+                </button>
+                <button class="action-btn action-btn-secondary" id="pause-restart-btn" style="margin-bottom: 15px;">
+                    شروع مجدد
+                </button>
+                <button class="action-btn action-btn-secondary" id="main-menu-btn">
+                    خروج به منو
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- اعلان -->
+    <div class="notification" id="notification"></div>
     
     <!-- موسیقی -->
     <audio id="background-music" loop>
         <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
     </audio>
     
-    <audio id="attack-sound" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-sword-slash-2768.mp3" type="audio/mpeg">
+    <audio id="select-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
     </audio>
     
-    <audio id="spell-sound" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-spell-illusion-312.mp3" type="audio/mpeg">
+    <audio id="next-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" type="audio/mpeg">
     </audio>
     
-    <audio id="heal-sound" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3" type="audio/mpeg">
-    </audio>
-    
-    <audio id="notification-sound" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+    <audio id="complete-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // ==================== تنظیمات بازی ====================
+        // ==================== متغیرهای اصلی ====================
         const Game = {
             // وضعیت بازی
             state: {
                 loaded: false,
-                paused: false,
-                inDialog: false,
-                inInventory: false,
-                inSkills: false,
-                inTerminal: false
+                examStarted: false,
+                currentQuestion: 0,
+                answers: {},
+                startTime: null,
+                timerInterval: null,
+                isPaused: false
             },
             
-            // داستان و پیشرفت
-            story: {
-                currentChapter: 1,
-                currentObjective: 0,
-                objectives: [
-                    "بررسی آزمایشگاه متروکه",
-                    "یافتن ترمینال اصلی",
-                    "جمع‌آوری قطعات کلید",
-                    "مقابله با موجودات جهش‌یافته",
-                    "فرار از آزمایشگاه"
-                ],
-                progress: 0
+            // داده‌های آزمون
+            examData: null,
+            questions: [],
+            totalQuestions: 0,
+            
+            // نتایج
+            results: {
+                totalScore: 0,
+                categoryScores: {},
+                personalityTraits: [],
+                analysis: ""
             },
-            
-            // وضعیت بازیکن
-            player: {
-                x: 400,
-                y: 300,
-                width: 32,
-                height: 48,
-                speed: 5,
-                health: 85,
-                maxHealth: 100,
-                energy: 100,
-                maxEnergy: 100,
-                gold: 1250,
-                crystals: 45,
-                inventory: [],
-                skills: [],
-                direction: 'down'
-            },
-            
-            // موجودیت
-            items: [
-                { id: 1, name: "شمشیر", icon: "fas fa-sword", type: "weapon", damage: 15 },
-                { id: 2, name: "زره", icon: "fas fa-vest", type: "armor", defense: 10 },
-                { id: 3, name: "طلسم", icon: "fas fa-gem", type: "artifact", power: 20 },
-                { id: 4, name: "پotion", icon: "fas fa-wine-bottle", type: "potion", heal: 30 },
-                { id: 5, name: "کلید", icon: "fas fa-key", type: "key" },
-                { id: 6, name: "نقشه", icon: "fas fa-map", type: "map" },
-                { id: 7, name: "چراغ", icon: "fas fa-lamp", type: "tool" }
-            ],
-            
-            // مهارت‌ها
-            skills: [
-                { id: 1, name: "حمله قدرتمند", icon: "fas fa-fist-raised", description: "۲۰٪ آسیب بیشتر", cost: 10, unlocked: true },
-                { id: 2, name: "دفاع فولادی", icon: "fas fa-shield-alt", description: "۱۵٪ دفاع بیشتر", cost: 15, unlocked: true },
-                { id: 3, name: "طلسم آتش", icon: "fas fa-fire", description: "طلاق آتشی", cost: 25, unlocked: false },
-                { id: 4, name: "شفا", icon: "fas fa-heart", description: "۳۰ سلامت بازیابی", cost: 20, unlocked: true }
-            ],
-            
-            // موجودیت‌های بازی
-            entities: [],
-            enemies: [],
-            npcs: [],
-            doors: [],
-            terminals: [],
             
             // صداها
             sounds: {},
             
-            // گرافیک
-            canvas: null,
-            ctx: null,
-            tileSize: 32,
-            camera: { x: 0, y: 0, width: 800, height: 600 },
-            
-            // کنترل‌ها
-            keys: {},
-            
-            // زمان
-            lastTime: 0,
-            deltaTime: 0,
-            
-            // انیمیشن‌ها
-            animations: [],
-            particles: []
+            // تایمر
+            elapsedTime: 0
         };
         
         // ==================== بارگذاری بازی ====================
@@ -902,12 +833,12 @@
             // بارگذاری تدریجی
             let loadProgress = 0;
             const loadingInterval = setInterval(() => {
-                loadProgress += Math.random() * 10 + 5;
+                loadProgress += Math.random() * 15 + 5;
                 if (loadProgress > 100) {
                     loadProgress = 100;
                     clearInterval(loadingInterval);
                     
-                    document.getElementById('loading-text').textContent = 'بازی آماده است!';
+                    document.getElementById('loading-text').textContent = 'آماده است!';
                     setTimeout(() => {
                         document.getElementById('loading-screen').style.opacity = '0';
                         setTimeout(() => {
@@ -923,1052 +854,118 @@
         });
         
         // ==================== راه‌اندازی بازی ====================
-        function initGame() {
-            // راه‌اندازی کانواس
-            Game.canvas = document.getElementById('game-canvas');
-            Game.ctx = Game.canvas.getContext('2d');
-            
-            // تنظیم اندازه کانواس
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            
-            // راه‌اندازی صداها
-            initSounds();
-            
-            // راه‌اندازی کنترل‌ها
-            initControls();
-            
-            // راه‌اندازی موجودیت‌های بازی
-            initGameWorld();
-            
-            // راه‌اندازی موجودیت
-            initInventory();
-            initSkills();
-            
-            // شروع بازی
-            Game.state.loaded = true;
-            requestAnimationFrame(gameLoop);
-            
-            // نمایش اولین دیالوگ
-            setTimeout(() => {
-                showDialog(
-                    "یادداشت آزمایشگاه",
-                    "به آزمایشگاه پروژه Demur خوش آمدید. این تسهیلات پس از حادثه مرموزی متروکه شده است. هدف شما کشف راز این حادثه و زنده ماندن است.",
-                    [
-                        { text: "ادامه", action: () => hideDialog() }
-                    ]
-                );
-            }, 1000);
+        async function initGame() {
+            try {
+                // بارگذاری فایل سوالات
+                await loadQuestions();
+                
+                // راه‌اندازی صداها
+                initSounds();
+                
+                // راه‌اندازی کنترل‌ها
+                initControls();
+                
+                // تنظیم تایمر
+                initTimer();
+                
+                // بارگذاری اولین سوال
+                loadQuestion(0);
+                
+                Game.state.loaded = true;
+                Game.state.examStarted = true;
+                Game.state.startTime = new Date();
+                
+                // شروع تایمر
+                startTimer();
+                
+                // نمایش پیام خوش‌آمد
+                showNotification('آزمون خودشناسی Demur شروع شد! با صداقت پاسخ دهید.');
+                
+            } catch (error) {
+                console.error('خطا در راه‌اندازی بازی:', error);
+                showNotification('خطا در بارگذاری سوالات. لطفاً صفحه را رفرش کنید.');
+            }
         }
         
-        // تنظیم اندازه کانواس
-        function resizeCanvas() {
-            Game.canvas.width = window.innerWidth;
-            Game.canvas.height = window.innerHeight;
-            Game.camera.width = window.innerWidth;
-            Game.camera.height = window.innerHeight;
+        // بارگذاری سوالات از فایل JSON
+        async function loadQuestions() {
+            try {
+                // در اینجا می‌توانید مسیر واقعی فایل JSON را قرار دهید
+                // const response = await fetch('soal.json');
+                
+                // برای نمونه، از سوالات نمونه استفاده می‌کنیم
+                const sampleQuestions = {
+                    "exam_title": "آزمون خودشناسی عمیق Demur",
+                    "version": "3.0",
+                    "total_questions": 50,
+                    "description": "پرسش‌نامه‌ای برای کشف لایه‌های پنهان ذهن",
+                    "questions": []
+                };
+                
+                // ساخت 50 سوال نمونه
+                const categories = [
+                    "روانشناسی تاریک", "فلسفه اگزیستانسیال", "ناخودآگاه جمعی",
+                    "سایه‌های شخصیت", "معنای زندگی", "اراده آزاد", "مرگ و نیستی",
+                    "عشق و تنهایی", "خودفریبی", "نقاب‌های اجتماعی"
+                ];
+                
+                for (let i = 1; i <= 50; i++) {
+                    const category = categories[Math.floor(Math.random() * categories.length)];
+                    sampleQuestions.questions.push({
+                        "id": i,
+                        "category": category,
+                        "question": `سوال نمونه ${i}: وقتی به ${getRandomSubject()} فکر می‌کنید، چه احساسی دارید؟`,
+                        "options": {
+                            "a": "احساس آرامش و پذیرش",
+                            "b": "ترس و نگرانی",
+                            "c": "کنجکاوی و اشتیاق",
+                            "d": "بی‌تفاوتی و سردی"
+                        },
+                        "hint": "پاسخ شما باید منعکس کننده احساس واقعی‌تان باشد، نه آنچه فکر می‌کنید باید باشد",
+                        "depth_level": Math.floor(Math.random() * 10) + 1
+                    });
+                }
+                
+                Game.examData = sampleQuestions;
+                Game.questions = sampleQuestions.questions;
+                Game.totalQuestions = sampleQuestions.questions.length;
+                
+                // به‌روزرسانی UI
+                document.getElementById('exam-title').textContent = sampleQuestions.exam_title;
+                document.getElementById('total-questions').textContent = Game.totalQuestions;
+                
+            } catch (error) {
+                console.error('خطا در بارگذاری سوالات:', error);
+                throw error;
+            }
+        }
+        
+        // تابع کمکی برای ایجاد موضوعات تصادفی
+        function getRandomSubject() {
+            const subjects = [
+                "مرگ", "عشق", "تنهایی", "آزادی", "خدا", "خود واقعی‌تان",
+                "گذشته", "آینده", "شکست‌ها", "موفقیت‌ها", "رابطه‌ها",
+                "انتخاب‌های زندگی", "ترس‌های عمیق", "آرزوهای پنهان"
+            ];
+            return subjects[Math.floor(Math.random() * subjects.length)];
         }
         
         // راه‌اندازی صداها
         function initSounds() {
             Game.sounds = {
                 music: document.getElementById('background-music'),
-                attack: document.getElementById('attack-sound'),
-                spell: document.getElementById('spell-sound'),
-                heal: document.getElementById('heal-sound'),
-                notification: document.getElementById('notification-sound')
+                select: document.getElementById('select-sound'),
+                next: document.getElementById('next-sound'),
+                complete: document.getElementById('complete-sound')
             };
             
             // پخش موسیقی
             try {
-                Game.sounds.music.volume = 0.3;
+                Game.sounds.music.volume = 0.2;
                 Game.sounds.music.play();
             } catch (e) {
                 console.log("پخش خودکار موسیقی مسدود شد");
             }
-        }
-        
-        // راه‌اندازی کنترل‌ها
-        function initControls() {
-            // رویدادهای کیبورد
-            document.addEventListener('keydown', (e) => {
-                Game.keys[e.key.toLowerCase()] = true;
-                
-                // کنترل‌های ویژه
-                if (e.key === 'Escape') {
-                    togglePause();
-                }
-                
-                if (e.key === 'i' && !Game.state.paused) {
-                    toggleInventory();
-                }
-                
-                if (e.key === 'k' && !Game.state.paused) {
-                    toggleSkills();
-                }
-                
-                if (e.key === 'Enter' && Game.state.inTerminal) {
-                    processTerminalCommand();
-                }
-            });
-            
-            document.addEventListener('keyup', (e) => {
-                Game.keys[e.key.toLowerCase()] = false;
-            });
-            
-            // رویدادهای کلیک
-            document.getElementById('inventory-btn').addEventListener('click', toggleInventory);
-            document.getElementById('skills-btn').addEventListener('click', toggleSkills);
-            document.getElementById('pause-btn').addEventListener('click', togglePause);
-            document.getElementById('close-inventory').addEventListener('click', toggleInventory);
-            document.getElementById('close-skills').addEventListener('click', toggleSkills);
-            document.getElementById('resume-btn').addEventListener('click', togglePause);
-            document.getElementById('save-btn').addEventListener('click', saveGame);
-            document.getElementById('settings-btn').addEventListener('click', showSettings);
-            document.getElementById('quit-btn').addEventListener('click', quitToMenu);
-            document.getElementById('close-terminal').addEventListener('click', hideTerminal);
-            
-            // دکمه‌های مهارت
-            document.getElementById('skill1').addEventListener('click', () => useSkill(0));
-            document.getElementById('skill2').addEventListener('click', () => useSkill(1));
-            document.getElementById('skill3').addEventListener('click', () => useSkill(2));
-            document.getElementById('skill4').addEventListener('click', () => useSkill(3));
-        }
-        
-        // راه‌اندازی دنیای بازی
-        function initGameWorld() {
-            // ایجاد آزمایشگاه
-            createLaboratory();
-            
-            // اضافه کردن موجودیت‌های تصادفی
-            for (let i = 0; i < 5; i++) {
-                Game.items.forEach(item => {
-                    if (Math.random() > 0.7) {
-                        Game.entities.push({
-                            ...item,
-                            x: Math.random() * 1500,
-                            y: Math.random() * 1000,
-                            collected: false
-                        });
-                    }
-                });
-            }
-            
-            // اضافه کردن دشمنان
-            for (let i = 0; i < 3; i++) {
-                Game.enemies.push({
-                    x: 600 + i * 200,
-                    y: 400,
-                    width: 32,
-                    height: 48,
-                    health: 50,
-                    type: 'mutant',
-                    speed: 2,
-                    direction: 'left'
-                });
-            }
-            
-            // اضافه کردن درها
-            Game.doors.push({
-                x: 800,
-                y: 300,
-                width: 64,
-                height: 96,
-                locked: true,
-                leadsTo: 'lab2'
-            });
-            
-            // اضافه کردن ترمینال‌ها
-            Game.terminals.push({
-                x: 500,
-                y: 200,
-                width: 48,
-                height: 32,
-                active: true
-            });
-        }
-        
-        // ایجاد آزمایشگاه
-        function createLaboratory() {
-            // در نسخه کامل، اینجا نقشه آزمایشگاه بارگذاری می‌شود
-            console.log("آزمایشگاه ایجاد شد");
-        }
-        
-        // راه‌اندازی موجودیت
-        function initInventory() {
-            const grid = document.getElementById('inventory-grid');
-            grid.innerHTML = '';
-            
-            // 16 اسلات موجودیت
-            for (let i = 0; i < 16; i++) {
-                const slot = document.createElement('div');
-                slot.className = 'inventory-slot';
-                slot.id = `slot-${i}`;
-                
-                if (Game.player.inventory[i]) {
-                    const item = Game.player.inventory[i];
-                    slot.classList.add('filled');
-                    slot.innerHTML = `
-                        <div class="item-icon"><i class="${item.icon}"></i></div>
-                        <div class="item-name">${item.name}</div>
-                    `;
-                }
-                
-                slot.addEventListener('click', () => {
-                    if (Game.player.inventory[i]) {
-                        useItem(Game.player.inventory[i]);
-                    }
-                });
-                
-                grid.appendChild(slot);
-            }
-        }
-        
-        // راه‌اندازی مهارت‌ها
-        function initSkills() {
-            const tree = document.getElementById('skill-tree');
-            tree.innerHTML = '';
-            
-            Game.skills.forEach((skill, index) => {
-                const node = document.createElement('div');
-                node.className = `skill-node ${skill.unlocked ? 'unlocked' : 'locked'}`;
-                node.innerHTML = `
-                    <div class="item-icon"><i class="${skill.icon}"></i></div>
-                    <div class="item-name">${skill.name}</div>
-                `;
-                
-                node.addEventListener('click', () => {
-                    if (skill.unlocked) {
-                        showNotification(`مهارت ${skill.name} فعال شد`);
-                    } else {
-                        showNotification('این مهارت هنوز باز نشده است');
-                    }
-                });
-                
-                tree.appendChild(node);
-            });
-        }
-        
-        // ==================== حلقه اصلی بازی ====================
-        function gameLoop(timestamp) {
-            if (!Game.state.loaded) return;
-            
-            Game.deltaTime = timestamp - Game.lastTime;
-            Game.lastTime = timestamp;
-            
-            // به‌روزرسانی
-            if (!Game.state.paused) {
-                updateGame();
-            }
-            
-            // رندر
-            renderGame();
-            
-            // ادامه حلقه
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // به‌روزرسانی بازی
-        function updateGame() {
-            // حرکت بازیکن
-            updatePlayer();
-            
-            // به‌روزرسانی دشمنان
-            updateEnemies();
-            
-            // به‌روزرسانی موجودیت‌ها
-            updateEntities();
-            
-            // به‌روزرسانی دوربین
-            updateCamera();
-            
-            // بررسی برخوردها
-            checkCollisions();
-            
-            // به‌روزرسانی UI
-            updateUI();
-            
-            // به‌روزرسانی انیمیشن‌ها
-            updateAnimations();
-            
-            // به‌روزرسانی ذرات
-            updateParticles();
-        }
-        
-        // حرکت بازیکن
-        function updatePlayer() {
-            let dx = 0, dy = 0;
-            
-            // کنترل با WASD
-            if (Game.keys['w'] || Game.keys['arrowup']) dy = -1;
-            if (Game.keys['s'] || Game.keys['arrowdown']) dy = 1;
-            if (Game.keys['a'] || Game.keys['arrowleft']) dx = -1;
-            if (Game.keys['d'] || Game.keys['arrowright']) dx = 1;
-            
-            // نرمال‌سازی حرکت مورب
-            if (dx !== 0 && dy !== 0) {
-                dx *= 0.707;
-                dy *= 0.707;
-            }
-            
-            // حرکت بازیکن
-            Game.player.x += dx * Game.player.speed;
-            Game.player.y += dy * Game.player.speed;
-            
-            // به‌روزرسانی جهت
-            if (dx !== 0 || dy !== 0) {
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    Game.player.direction = dx > 0 ? 'right' : 'left';
-                } else {
-                    Game.player.direction = dy > 0 ? 'down' : 'up';
-                }
-            }
-            
-            // محدودیت انرژی
-            if ((dx !== 0 || dy !== 0) && Game.player.energy > 0) {
-                Game.player.energy -= 0.1;
-            } else if (Game.player.energy < Game.player.maxEnergy) {
-                Game.player.energy += 0.05;
-            }
-            
-            Game.player.energy = Math.max(0, Math.min(Game.player.maxEnergy, Game.player.energy));
-        }
-        
-        // به‌روزرسانی دشمنان
-        function updateEnemies() {
-            Game.enemies.forEach(enemy => {
-                // حرکت ساده به سمت بازیکن
-                const dx = Game.player.x - enemy.x;
-                const dy = Game.player.y - enemy.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 300) { // دشمن بازیکن را می‌بیند
-                    enemy.x += (dx / distance) * enemy.speed;
-                    enemy.y += (dy / distance) * enemy.speed;
-                    
-                    // به‌روزرسانی جهت دشمن
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        enemy.direction = dx > 0 ? 'right' : 'left';
-                    } else {
-                        enemy.direction = dy > 0 ? 'down' : 'up';
-                    }
-                }
-            });
-        }
-        
-        // به‌روزرسانی موجودیت‌ها
-        function updateEntities() {
-            // در نسخه کامل، اینجا موجودیت‌های متحرک به‌روزرسانی می‌شوند
-        }
-        
-        // به‌روزرسانی دوربین
-        function updateCamera() {
-            // دوربین بازیکن را دنبال می‌کند
-            Game.camera.x = Game.player.x - Game.camera.width / 2;
-            Game.camera.y = Game.player.y - Game.camera.height / 2;
-            
-            // محدودیت‌های دوربین
-            const maxX = 1500 - Game.camera.width;
-            const maxY = 1000 - Game.camera.height;
-            
-            Game.camera.x = Math.max(0, Math.min(maxX, Game.camera.x));
-            Game.camera.y = Math.max(0, Math.min(maxY, Game.camera.y));
-        }
-        
-        // بررسی برخوردها
-        function checkCollisions() {
-            // برخورد با موجودیت‌ها
-            Game.entities.forEach((entity, index) => {
-                if (!entity.collected && checkRectCollision(
-                    Game.player.x, Game.player.y, Game.player.width, Game.player.height,
-                    entity.x, entity.y, 32, 32
-                )) {
-                    entity.collected = true;
-                    collectItem(entity);
-                    Game.entities.splice(index, 1);
-                }
-            });
-            
-            // برخورد با دشمنان
-            Game.enemies.forEach(enemy => {
-                if (checkRectCollision(
-                    Game.player.x, Game.player.y, Game.player.width, Game.player.height,
-                    enemy.x, enemy.y, enemy.width, enemy.height
-                )) {
-                    takeDamage(5);
-                }
-            });
-            
-            // برخورد با ترمینال‌ها
-            Game.terminals.forEach(terminal => {
-                if (terminal.active && checkRectCollision(
-                    Game.player.x, Game.player.y, Game.player.width, Game.player.height,
-                    terminal.x, terminal.y, terminal.width, terminal.height
-                )) {
-                    showTerminal();
-                    terminal.active = false;
-                }
-            });
-        }
-        
-        // بررسی برخورد مستطیل‌ها
-        function checkRectCollision(x1, y1, w1, h1, x2, y2, w2, h2) {
-            return x1 < x2 + w2 &&
-                   x1 + w1 > x2 &&
-                   y1 < y2 + h2 &&
-                   y1 + h1 > y2;
-        }
-        
-        // به‌روزرسانی UI
-        function updateUI() {
-            // سلامت
-            const healthPercent = (Game.player.health / Game.player.maxHealth) * 100;
-            document.getElementById('health-fill').style.width = `${healthPercent}%`;
-            document.getElementById('health-text').textContent = 
-                `${Math.floor(Game.player.health)}/${Game.player.maxHealth}`;
-            
-            // تغییر رنگ نوار سلامت
-            const healthFill = document.getElementById('health-fill');
-            if (healthPercent > 70) {
-                healthFill.style.background = 'linear-gradient(90deg, #2ecc71, #1abc9c)';
-            } else if (healthPercent > 30) {
-                healthFill.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
-            } else {
-                healthFill.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
-            }
-            
-            // منابع
-            document.getElementById('gold-value').textContent = Game.player.gold;
-            document.getElementById('crystal-value').textContent = Game.player.crystals;
-            document.getElementById('energy-value').textContent = 
-                `${Math.floor(Game.player.energy)}/${Game.player.maxEnergy}`;
-            
-            // داستان
-            document.getElementById('story-text').textContent = 
-                `مأموریت: ${Game.story.objectives[Game.story.currentObjective]}`;
-            
-            const progressPercent = (Game.story.progress / 100) * 100;
-            document.getElementById('story-progress-bar').style.width = `${progressPercent}%`;
-        }
-        
-        // به‌روزرسانی انیمیشن‌ها
-        function updateAnimations() {
-            Game.animations = Game.animations.filter(anim => {
-                anim.time += Game.deltaTime;
-                return anim.time < anim.duration;
-            });
-        }
-        
-        // به‌روزرسانی ذرات
-        function updateParticles() {
-            Game.particles = Game.particles.filter(particle => {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.life--;
-                return particle.life > 0;
-            });
-        }
-        
-        // ==================== رندر بازی ====================
-        function renderGame() {
-            const ctx = Game.ctx;
-            
-            // پاک کردن صفحه
-            ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, Game.canvas.width, Game.canvas.height);
-            
-            // ترجمه بر اساس دوربین
-            ctx.save();
-            ctx.translate(-Game.camera.x, -Game.camera.y);
-            
-            // رندر زمینه
-            renderBackground(ctx);
-            
-            // رندر موجودیت‌ها
-            Game.entities.forEach(entity => {
-                if (!entity.collected) {
-                    renderEntity(ctx, entity);
-                }
-            });
-            
-            // رندر دشمنان
-            Game.enemies.forEach(enemy => {
-                renderEnemy(ctx, enemy);
-            });
-            
-            // رندر درها
-            Game.doors.forEach(door => {
-                renderDoor(ctx, door);
-            });
-            
-            // رندر ترمینال‌ها
-            Game.terminals.forEach(terminal => {
-                renderTerminal(ctx, terminal);
-            });
-            
-            // رندر بازیکن
-            renderPlayer(ctx);
-            
-            // رندر ذرات
-            renderParticles(ctx);
-            
-            ctx.restore();
-            
-            // رندر HUD
-            renderHUD(ctx);
-        }
-        
-        // رندر زمینه
-        function renderBackground(ctx) {
-            // کاشی‌بندی آزمایشگاه
-            const tileSize = Game.tileSize;
-            const cols = Math.ceil(1500 / tileSize);
-            const rows = Math.ceil(1000 / tileSize);
-            
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, cols * tileSize, rows * tileSize);
-            
-            // خطوط شبکه
-            ctx.strokeStyle = 'rgba(46, 204, 113, 0.1)';
-            ctx.lineWidth = 1;
-            
-            for (let x = 0; x <= cols; x++) {
-                ctx.beginPath();
-                ctx.moveTo(x * tileSize, 0);
-                ctx.lineTo(x * tileSize, rows * tileSize);
-                ctx.stroke();
-            }
-            
-            for (let y = 0; y <= rows; y++) {
-                ctx.beginPath();
-                ctx.moveTo(0, y * tileSize);
-                ctx.lineTo(cols * tileSize, y * tileSize);
-                ctx.stroke();
-            }
-            
-            // دیوارها و اشیاء آزمایشگاه
-            ctx.fillStyle = '#222';
-            ctx.fillRect(200, 200, 400, 20); // دیوار بالا
-            ctx.fillRect(200, 200, 20, 400); // دیوار چپ
-            ctx.fillRect(580, 200, 20, 400); // دیوار راست
-            ctx.fillRect(200, 580, 400, 20); // دیوار پایین
-            
-            // میزها
-            ctx.fillStyle = '#333';
-            ctx.fillRect(300, 300, 100, 60);
-            ctx.fillRect(450, 400, 100, 60);
-            
-            // تجهیزات
-            ctx.fillStyle = '#2ecc71';
-            ctx.fillRect(350, 250, 40, 40); // دستگاه
-            ctx.fillRect(500, 350, 40, 40); // دستگاه
-        }
-        
-        // رندر بازیکن
-        function renderPlayer(ctx) {
-            const player = Game.player;
-            
-            // رنگ بازیکن بر اساس سلامت
-            let color = '#2ecc71';
-            if (player.health < 30) color = '#e74c3c';
-            else if (player.health < 70) color = '#f39c12';
-            
-            // بدن بازیکن
-            ctx.fillStyle = color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            
-            // سر بازیکن
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(player.x + 10, player.y + 5, 12, 12);
-            
-            // جهت بازیکن
-            ctx.fillStyle = '#000';
-            switch(player.direction) {
-                case 'up':
-                    ctx.fillRect(player.x + 10, player.y - 5, 12, 5);
-                    break;
-                case 'down':
-                    ctx.fillRect(player.x + 10, player.y + player.height, 12, 5);
-                    break;
-                case 'left':
-                    ctx.fillRect(player.x - 5, player.y + 10, 5, 12);
-                    break;
-                case 'right':
-                    ctx.fillRect(player.x + player.width, player.y + 10, 5, 12);
-                    break;
-            }
-            
-            // نام بازیکن
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Vazirmatn';
-            ctx.textAlign = 'center';
-            ctx.fillText('بازیکن', player.x + player.width/2, player.y - 10);
-        }
-        
-        // رندر دشمن
-        function renderEnemy(ctx, enemy) {
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-            
-            // چشم‌ها
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(enemy.x + 8, enemy.y + 10, 6, 6);
-            ctx.fillRect(enemy.x + 18, enemy.y + 10, 6, 6);
-            
-            // نام
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Vazirmatn';
-            ctx.textAlign = 'center';
-            ctx.fillText('جهش‌یافته', enemy.x + enemy.width/2, enemy.y - 10);
-        }
-        
-        // رندر موجودیت
-        function renderEntity(ctx, entity) {
-            ctx.fillStyle = '#3498db';
-            ctx.fillRect(entity.x, entity.y, 32, 32);
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = '20px FontAwesome';
-            ctx.textAlign = 'center';
-            ctx.fillText(getIconCode(entity.icon), entity.x + 16, entity.y + 24);
-            
-            // درخشش
-            ctx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(entity.x, entity.y, 32, 32);
-        }
-        
-        // رندر در
-        function renderDoor(ctx, door) {
-            ctx.fillStyle = door.locked ? '#c0392b' : '#2ecc71';
-            ctx.fillRect(door.x, door.y, door.width, door.height);
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = '16px Vazirmatn';
-            ctx.textAlign = 'center';
-            ctx.fillText(door.locked ? 'قفل' : 'باز', door.x + door.width/2, door.y + door.height/2 + 5);
-        }
-        
-        // رندر ترمینال
-        function renderTerminal(ctx, terminal) {
-            ctx.fillStyle = '#2ecc71';
-            ctx.fillRect(terminal.x, terminal.y, terminal.width, terminal.height);
-            
-            // صفحه نمایش
-            ctx.fillStyle = '#000';
-            ctx.fillRect(terminal.x + 4, terminal.y + 4, terminal.width - 8, terminal.height - 8);
-            
-            // متن
-            ctx.fillStyle = '#2ecc71';
-            ctx.font = '12px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('TERM', terminal.x + terminal.width/2, terminal.y + terminal.height/2 + 4);
-            
-            // درخشش
-            if (terminal.active) {
-                ctx.shadowColor = '#2ecc71';
-                ctx.shadowBlur = 15;
-                ctx.fillRect(terminal.x, terminal.y, terminal.width, terminal.height);
-                ctx.shadowBlur = 0;
-            }
-        }
-        
-        // رندر ذرات
-        function renderParticles(ctx) {
-            Game.particles.forEach(particle => {
-                ctx.globalAlpha = particle.life / 100;
-                ctx.fillStyle = particle.color;
-                ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
-            });
-            ctx.globalAlpha = 1;
-        }
-        
-        // رندر HUD
-        function renderHUD(ctx) {
-            // تمام HUD توسط HTML/CSS رندر می‌شود
-        }
-        
-        // ==================== منطق بازی ====================
-        // جمع‌آوری آیتم
-        function collectItem(item) {
-            Game.player.inventory.push({...item});
-            showNotification(`${item.name} یافت شد!`);
-            playSound('notification');
-            
-            // به‌روزرسانی موجودیت
-            updateInventoryDisplay();
-            
-            // پیشرفت داستان
-            Game.story.progress += 10;
-            checkStoryProgress();
-        }
-        
-        // استفاده از آیتم
-        function useItem(item) {
-            switch(item.type) {
-                case 'potion':
-                    Game.player.health = Math.min(Game.player.maxHealth, Game.player.health + item.heal);
-                    showNotification(`${item.heal} سلامت بازیابی شد`);
-                    playSound('heal');
-                    break;
-                case 'weapon':
-                    showNotification(`${item.name} برای مبارزه آماده است`);
-                    playSound('attack');
-                    break;
-                default:
-                    showNotification(`از ${item.name} استفاده شد`);
-            }
-            
-            // حذف از موجودیت
-            const index = Game.player.inventory.findIndex(i => i.id === item.id);
-            if (index > -1) {
-                Game.player.inventory.splice(index, 1);
-                updateInventoryDisplay();
-            }
-        }
-        
-        // استفاده از مهارت
-        function useSkill(index) {
-            const skill = Game.skills[index];
-            const btn = document.getElementById(`skill${index + 1}`);
-            
-            if (btn.classList.contains('cooldown')) return;
-            
-            if (skill.unlocked && Game.player.energy >= skill.cost) {
-                Game.player.energy -= skill.cost;
-                
-                switch(skill.id) {
-                    case 1: // حمله قدرتمند
-                        createDamageParticles();
-                        showNotification('حمله قدرتمند!');
-                        playSound('attack');
-                        break;
-                    case 2: // دفاع
-                        showNotification('دفاع افزایش یافت');
-                        break;
-                    case 3: // طلسم
-                        createSpellParticles();
-                        showNotification('طلسم آتش!');
-                        playSound('spell');
-                        break;
-                    case 4: // شفا
-                        Game.player.health = Math.min(Game.player.maxHealth, Game.player.health + 30);
-                        showNotification('۳۰ سلامت بازیابی شد');
-                        playSound('heal');
-                        break;
-                }
-                
-                // کول‌داون
-                btn.classList.add('cooldown');
-                const cooldownOverlay = document.createElement('div');
-                cooldownOverlay.className = 'cooldown-overlay';
-                cooldownOverlay.style.height = '0%';
-                btn.appendChild(cooldownOverlay);
-                
-                let height = 0;
-                const cooldownInterval = setInterval(() => {
-                    height += 2;
-                    cooldownOverlay.style.height = `${height}%`;
-                    
-                    if (height >= 100) {
-                        clearInterval(cooldownInterval);
-                        setTimeout(() => {
-                            btn.classList.remove('cooldown');
-                            btn.removeChild(cooldownOverlay);
-                        }, 500);
-                    }
-                }, 100);
-            }
-        }
-        
-        // دریافت آسیب
-        function takeDamage(amount) {
-            Game.player.health -= amount;
-            
-            // ایجاد پاپ آپ آسیب
-            createDamagePopup(amount);
-            
-            // انیمیشن لرزش
-            document.getElementById('game-container').style.animation = 'shake 0.5s';
-            setTimeout(() => {
-                document.getElementById('game-container').style.animation = '';
-            }, 500);
-            
-            // بررسی مرگ
-            if (Game.player.health <= 0) {
-                gameOver();
-            }
-        }
-        
-        // ایجاد پاپ آپ آسیب
-        function createDamagePopup(amount) {
-            const popup = document.createElement('div');
-            popup.className = 'damage-popup';
-            popup.textContent = `-${amount}`;
-            popup.style.left = `${Game.player.x - Game.camera.x + 16}px`;
-            popup.style.top = `${Game.player.y - Game.camera.y}px`;
-            document.getElementById('game-container').appendChild(popup);
-            
-            setTimeout(() => {
-                popup.remove();
-            }, 1000);
-        }
-        
-        // ایجاد ذرات آسیب
-        function createDamageParticles() {
-            for (let i = 0; i < 20; i++) {
-                Game.particles.push({
-                    x: Game.player.x,
-                    y: Game.player.y,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10 - 5,
-                    color: '#e74c3c',
-                    size: Math.random() * 4 + 2,
-                    life: 100
-                });
-            }
-        }
-        
-        // ایجاد ذرات طلسم
-        function createSpellParticles() {
-            for (let i = 0; i < 30; i++) {
-                Game.particles.push({
-                    x: Game.player.x,
-                    y: Game.player.y,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    color: '#f39c12',
-                    size: Math.random() * 5 + 3,
-                    life: 80
-                });
-            }
-        }
-        
-        // بررسی پیشرفت داستان
-        function checkStoryProgress() {
-            if (Game.story.progress >= 100) {
-                Game.story.currentObjective++;
-                Game.story.progress = 0;
-                
-                if (Game.story.currentObjective < Game.story.objectives.length) {
-                    showNotification(`مأموریت جدید: ${Game.story.objectives[Game.story.currentObjective]}`);
-                } else {
-                    // پایان بازی
-                    showDialog(
-                        "پایان داستان",
-                        "تبریک! شما از آزمایشگاه Demur فرار کردید. اما رازهای بیشتری در انتظار کشف شدن هستند...",
-                        [
-                            { text: "ادامه", action: () => showCredits() }
-                        ]
-                    );
-                }
-            }
-        }
-        
-        // ==================== UI و منوها ====================
-        // نمایش دیالوگ
-        function showDialog(title, text, options) {
-            Game.state.inDialog = true;
-            document.getElementById('dialog-title').textContent = title;
-            document.getElementById('dialog-text').textContent = text;
-            
-            const optionsContainer = document.getElementById('dialog-options');
-            optionsContainer.innerHTML = '';
-            
-            options.forEach(option => {
-                const btn = document.createElement('div');
-                btn.className = 'dialog-option';
-                btn.textContent = option.text;
-                btn.addEventListener('click', () => {
-                    hideDialog();
-                    if (option.action) option.action();
-                });
-                optionsContainer.appendChild(btn);
-            });
-            
-            document.getElementById('dialog-box').style.display = 'block';
-        }
-        
-        // مخفی کردن دیالوگ
-        function hideDialog() {
-            Game.state.inDialog = false;
-            document.getElementById('dialog-box').style.display = 'none';
-        }
-        
-        // نمایش ترمینال
-        function showTerminal() {
-            Game.state.inTerminal = true;
-            document.getElementById('terminal').style.display = 'block';
-            document.getElementById('terminal-input').focus();
-            showNotification('ترمینال فعال شد. دستورات را وارد کنید.');
-        }
-        
-        // مخفی کردن ترمینال
-        function hideTerminal() {
-            Game.state.inTerminal = false;
-            document.getElementById('terminal').style.display = 'none';
-        }
-        
-        // پردازش دستور ترمینال
-        function processTerminalCommand() {
-            const input = document.getElementById('terminal-input');
-            const output = document.getElementById('terminal-output');
-            const command = input.value.trim().toLowerCase();
-            
-            output.innerHTML += `> ${command}<br>`;
-            
-            switch(command) {
-                case 'help':
-                    output.innerHTML += 'دستورات موجود: help, status, unlock, scan, clear<br>';
-                    break;
-                case 'status':
-                    output.innerHTML += `وضعیت سیستم: پایدار<br>بازیکن: سلامت ${Game.player.health}<br>`;
-                    break;
-                case 'unlock doors':
-                    output.innerHTML += 'درب‌ها باز شدند<br>';
-                    Game.doors.forEach(door => door.locked = false);
-                    break;
-                case 'scan':
-                    output.innerHTML += 'اسکن محیط: موجودات جهش‌یافته شناسایی شدند<br>';
-                    break;
-                case 'clear':
-                    output.innerHTML = '';
-                    break;
-                default:
-                    output.innerHTML += 'دستور نامعتبر است. help را تایپ کنید.<br>';
-            }
-            
-            output.innerHTML += '><br>';
-            output.scrollTop = output.scrollHeight;
-            input.value = '';
-        }
-        
-        // نمایش موجودیت
-        function toggleInventory() {
-            if (Game.state.paused) return;
-            
-            Game.state.inInventory = !Game.state.inInventory;
-            if (Game.state.inInventory) {
-                updateInventoryDisplay();
-                document.getElementById('inventory-box').style.display = 'block';
-            } else {
-                document.getElementById('inventory-box').style.display = 'none';
-            }
-        }
-        
-        // به‌روزرسانی نمایش موجودیت
-        function updateInventoryDisplay() {
-            const slots = document.querySelectorAll('.inventory-slot');
-            slots.forEach((slot, index) => {
-                slot.classList.remove('filled');
-                slot.innerHTML = '';
-                
-                if (Game.player.inventory[index]) {
-                    const item = Game.player.inventory[index];
-                    slot.classList.add('filled');
-                    slot.innerHTML = `
-                        <div class="item-icon"><i class="${item.icon}"></i></div>
-                        <div class="item-name">${item.name}</div>
-                    `;
-                }
-            });
-        }
-        
-        // نمایش مهارت‌ها
-        function toggleSkills() {
-            if (Game.state.paused) return;
-            
-            Game.state.inSkills = !Game.state.inSkills;
-            document.getElementById('skills-panel').style.display = 
-                Game.state.inSkills ? 'block' : 'none';
-        }
-        
-        // کنترل پاوز
-        function togglePause() {
-            Game.state.paused = !Game.state.paused;
-            document.getElementById('pause-menu').style.display = 
-                Game.state.paused ? 'block' : 'none';
-            
-            if (Game.state.paused) {
-                Game.sounds.music.pause();
-            } else {
-                Game.sounds.music.play();
-            }
-        }
-        
-        // ذخیره بازی
-        function saveGame() {
-            const saveData = {
-                player: Game.player,
-                story: Game.story,
-                inventory: Game.player.inventory
-            };
-            
-            localStorage.setItem('demur_save', JSON.stringify(saveData));
-            showNotification('بازی ذخیره شد!');
-        }
-        
-        // نمایش تنظیمات
-        function showSettings() {
-            showDialog(
-                "تنظیمات",
-                "تنظیمات بازی در نسخه کامل در دسترس خواهد بود.",
-                [
-                    { text: "متوجه شدم", action: () => hideDialog() }
-                ]
-            );
-        }
-        
-        // خروج به منو
-        function quitToMenu() {
-            if (confirm('آیا مطمئن هستید؟ پیشرفت ذخیره خواهد شد.')) {
-                saveGame();
-                window.location.href = 'main.html';
-            }
-        }
-        
-        // پایان بازی
-        function gameOver() {
-            showDialog(
-                "شکست خوردید",
-                "شما در آزمایشگاه Demur شکست خوردید. آیا می‌خواهید دوباره تلاش کنید؟",
-                [
-                    { text: "تلاش مجدد", action: () => restartGame() },
-                    { text: "خروج", action: () => quitToMenu() }
-                ]
-            );
-        }
-        
-        // نمایش اعتبارات
-        function showCredits() {
-            showDialog(
-                "پایان",
-                "بازی Demur - نسخه نمایشی\n\nطراحی و توسعه: تیم Demur\nموسیقی: آرایش ویژه\nگرافیک: سیستم دو بعدی سفارشی\n\nبا تشکر از بازی شما!",
-                [
-                    { text: "بازگشت به منو", action: () => quitToMenu() }
-                ]
-            );
-        }
-        
-        // راه‌اندازی مجدد بازی
-        function restartGame() {
-            location.reload();
-        }
-        
-        // ==================== ابزارها ====================
-        // نمایش اعلان
-        function showNotification(text) {
-            const notification = document.getElementById('notification');
-            notification.textContent = text;
-            notification.style.display = 'block';
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                    notification.style.opacity = '1';
-                }, 500);
-            }, 3000);
         }
         
         // پخش صدا
@@ -1984,27 +981,552 @@
             }
         }
         
-        // تبدیل آیکون FontAwesome به کد
-        function getIconCode(iconClass) {
-            const icons = {
-                'fas fa-sword': '⚔',
-                'fas fa-vest': '🛡',
-                'fas fa-gem': '💎',
-                'fas fa-wine-bottle': '🧪',
-                'fas fa-key': '🔑',
-                'fas fa-map': '🗺',
-                'fas fa-lamp': '💡',
-                'fas fa-coins': '🪙',
-                'fas fa-fire': '🔥',
-                'fas fa-heart': '❤',
-                'fas fa-shield-alt': '🛡',
-                'fas fa-fist-raised': '✊'
-            };
-            return icons[iconClass] || '?';
+        // راه‌اندازی کنترل‌ها
+        function initControls() {
+            // دکمه‌های ناوبری
+            document.getElementById('prev-btn').addEventListener('click', prevQuestion);
+            document.getElementById('next-btn').addEventListener('click', nextQuestion);
+            
+            // دکمه‌های نتایج
+            document.getElementById('restart-btn').addEventListener('click', restartExam);
+            document.getElementById('share-btn').addEventListener('click', shareResults);
+            document.getElementById('details-btn').addEventListener('click', showDetails);
+            
+            // دکمه‌های پاوز
+            document.getElementById('resume-btn').addEventListener('click', resumeExam);
+            document.getElementById('pause-restart-btn').addEventListener('click', restartExam);
+            document.getElementById('main-menu-btn').addEventListener('click', goToMainMenu);
+            
+            // کنترل با کیبورد
+            document.addEventListener('keydown', (e) => {
+                if (Game.state.isPaused) return;
+                
+                switch(e.key) {
+                    case 'ArrowRight':
+                    case 'd':
+                        if (!document.getElementById('prev-btn').disabled) {
+                            prevQuestion();
+                        }
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                        if (!document.getElementById('next-btn').disabled) {
+                            nextQuestion();
+                        }
+                        break;
+                    case '1':
+                        selectOption('a');
+                        break;
+                    case '2':
+                        selectOption('b');
+                        break;
+                    case '3':
+                        selectOption('c');
+                        break;
+                    case '4':
+                        selectOption('d');
+                        break;
+                    case 'Escape':
+                        togglePause();
+                        break;
+                    case 'Enter':
+                        if (Game.state.currentQuestion < Game.totalQuestions - 1) {
+                            nextQuestion();
+                        } else {
+                            finishExam();
+                        }
+                        break;
+                }
+            });
+            
+            // کنترل کلیک خارج از پاوز منو
+            document.getElementById('pause-menu').addEventListener('click', (e) => {
+                if (e.target.id === 'pause-menu') {
+                    resumeExam();
+                }
+            });
         }
         
-        // ==================== شروع بازی ====================
-        // بازی به طور خودکار پس از بارگذاری شروع می‌شود
+        // راه‌اندازی تایمر
+        function initTimer() {
+            Game.elapsedTime = 0;
+            updateTimerDisplay();
+        }
+        
+        // شروع تایمر
+        function startTimer() {
+            Game.state.timerInterval = setInterval(() => {
+                if (!Game.state.isPaused) {
+                    Game.elapsedTime++;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+        
+        // به‌روزرسانی نمایش تایمر
+        function updateTimerDisplay() {
+            const minutes = Math.floor(Game.elapsedTime / 60);
+            const seconds = Game.elapsedTime % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // ==================== مدیریت سوالات ====================
+        // بارگذاری سوال
+        function loadQuestion(index) {
+            if (index < 0 || index >= Game.totalQuestions) return;
+            
+            const question = Game.questions[index];
+            Game.state.currentQuestion = index;
+            
+            // به‌روزرسانی UI
+            document.getElementById('question-number').textContent = `سوال ${index + 1}`;
+            document.getElementById('question-category').textContent = question.category;
+            document.getElementById('question-text').textContent = question.question;
+            document.getElementById('question-hint').textContent = question.hint || "لطفاً با صداقت کامل پاسخ دهید.";
+            document.getElementById('current-question').textContent = index + 1;
+            document.getElementById('depth-level').textContent = `عمق: ${question.depth_level || 0}`;
+            
+            // به‌روزرسانی نوار پیشرفت
+            const progress = ((index + 1) / Game.totalQuestions) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-percent').textContent = `${Math.round(progress)}%`;
+            
+            // ایجاد گزینه‌ها
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            const options = question.options;
+            const optionLetters = ['a', 'b', 'c', 'd'];
+            
+            optionLetters.forEach(letter => {
+                if (options[letter]) {
+                    const optionBtn = document.createElement('div');
+                    optionBtn.className = 'option-btn';
+                    if (Game.state.answers[index] === letter) {
+                        optionBtn.classList.add('selected');
+                    }
+                    optionBtn.dataset.option = letter;
+                    
+                    optionBtn.innerHTML = `
+                        <div class="option-label">${letter.toUpperCase()}</div>
+                        <div class="option-text">${options[letter]}</div>
+                    `;
+                    
+                    optionBtn.addEventListener('click', () => selectOption(letter));
+                    optionsContainer.appendChild(optionBtn);
+                }
+            });
+            
+            // به‌روزرسانی دکمه‌های ناوبری
+            document.getElementById('prev-btn').disabled = index === 0;
+            
+            if (index === Game.totalQuestions - 1) {
+                document.getElementById('next-btn').innerHTML = `
+                    اتمام آزمون
+                    <i class="fas fa-flag-checkered"></i>
+                `;
+            } else {
+                document.getElementById('next-btn').innerHTML = `
+                    سوال بعدی
+                    <i class="fas fa-arrow-left"></i>
+                `;
+            }
+            
+            // انیمیشن ظهور
+            optionsContainer.querySelectorAll('.option-btn').forEach((btn, i) => {
+                btn.style.animationDelay = `${i * 0.1}s`;
+                btn.classList.add('fade-in');
+            });
+        }
+        
+        // انتخاب گزینه
+        function selectOption(option) {
+            const currentIndex = Game.state.currentQuestion;
+            const optionBtns = document.querySelectorAll('.option-btn');
+            
+            // حذف انتخاب قبلی
+            optionBtns.forEach(btn => {
+                btn.classList.remove('selected', 'pulse');
+            });
+            
+            // انتخاب گزینه جدید
+            const selectedBtn = document.querySelector(`.option-btn[data-option="${option}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected', 'pulse');
+                Game.state.answers[currentIndex] = option;
+                playSound('select');
+                
+                // ذخیره خودکار پاسخ
+                saveAnswer(currentIndex, option);
+            }
+        }
+        
+        // ذخیره پاسخ
+        function saveAnswer(questionIndex, answer) {
+            Game.state.answers[questionIndex] = answer;
+            
+            // در نسخه کامل، می‌توان در localStorage ذخیره کرد
+            localStorage.setItem('demur_exam_answers', JSON.stringify(Game.state.answers));
+        }
+        
+        // سوال بعدی
+        function nextQuestion() {
+            const currentIndex = Game.state.currentQuestion;
+            
+            if (currentIndex < Game.totalQuestions - 1) {
+                loadQuestion(currentIndex + 1);
+                playSound('next');
+            } else {
+                finishExam();
+            }
+        }
+        
+        // سوال قبلی
+        function prevQuestion() {
+            const currentIndex = Game.state.currentQuestion;
+            if (currentIndex > 0) {
+                loadQuestion(currentIndex - 1);
+                playSound('next');
+            }
+        }
+        
+        // ==================== اتمام آزمون ====================
+        function finishExam() {
+            // توقف تایمر
+            clearInterval(Game.state.timerInterval);
+            
+            // محاسبه نتایج
+            calculateResults();
+            
+            // پخش صدا
+            playSound('complete');
+            
+            // نمایش نتایج
+            showResults();
+            
+            // ذخیره نتایج
+            saveResults();
+        }
+        
+        // محاسبه نتایج
+        function calculateResults() {
+            let totalScore = 0;
+            let categoryScores = {};
+            let traitCounts = {};
+            
+            // محاسبه امتیاز بر اساس پاسخ‌ها
+            Game.questions.forEach((question, index) => {
+                const answer = Game.state.answers[index];
+                if (!answer) return;
+                
+                // امتیازدهی ساده (می‌توانید منطق پیچیده‌تری پیاده‌سازی کنید)
+                const score = Math.floor(Math.random() * 20) + 10; // امتیاز تصادفی برای نمونه
+                totalScore += score;
+                
+                // امتیاز دسته‌بندی
+                if (!categoryScores[question.category]) {
+                    categoryScores[question.category] = { total: 0, count: 0 };
+                }
+                categoryScores[question.category].total += score;
+                categoryScores[question.category].count++;
+                
+                // شناسایی ویژگی‌های شخصیتی
+                identifyTraits(question, answer, traitCounts);
+            });
+            
+            // میانگین امتیاز دسته‌بندی‌ها
+            Object.keys(categoryScores).forEach(category => {
+                categoryScores[category].average = 
+                    categoryScores[category].total / categoryScores[category].count;
+            });
+            
+            // تعیین ویژگی‌های غالب
+            const personalityTraits = getDominantTraits(traitCounts);
+            
+            // تولید تحلیل
+            const analysis = generateAnalysis(totalScore, personalityTraits);
+            
+            Game.results = {
+                totalScore,
+                categoryScores,
+                personalityTraits,
+                analysis,
+                timeSpent: Game.elapsedTime,
+                completionDate: new Date().toLocaleString('fa-IR')
+            };
+        }
+        
+        // شناسایی ویژگی‌های شخصیتی
+        function identifyTraits(question, answer, traitCounts) {
+            // این تابع می‌تواند پیچیده‌تر باشد
+            const traitsMap = {
+                'a': ['درون‌گرا', 'تحلیلی', 'محافظه‌کار'],
+                'b': ['احساسی', 'هوشیار', 'محتاط'],
+                'c': ['کنجکاو', 'ماجراجو', 'خلاق'],
+                'd': ['منطقی', 'مستقل', 'رک']
+            };
+            
+            const traits = traitsMap[answer] || [];
+            traits.forEach(trait => {
+                traitCounts[trait] = (traitCounts[trait] || 0) + 1;
+            });
+        }
+        
+        // تعیین ویژگی‌های غالب
+        function getDominantTraits(traitCounts) {
+            return Object.entries(traitCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([trait]) => trait);
+        }
+        
+        // تولید تحلیل شخصیت
+        function generateAnalysis(totalScore, traits) {
+            const scoreLevel = totalScore / (Game.totalQuestions * 15);
+            
+            let analysis = "";
+            
+            if (scoreLevel > 0.8) {
+                analysis = "شما فردی بسیار عمیق و خودآگاه هستید. درک بالایی از خود و جهان اطراف دارید و تمایل زیادی به کاوش در لایه‌های پنهان وجود خود نشان می‌دهید.";
+            } else if (scoreLevel > 0.6) {
+                analysis = "شخصیت پیچیده و چندبعدی دارید. اگرچه گاهی در درک خود تردید دارید، اما تمایل واقعی به رشد و خودشناسی در شما وجود دارد.";
+            } else if (scoreLevel > 0.4) {
+                analysis = "در مسیر خودشناسی قرار دارید. گاهی با تضادهای درونی روبرو می‌شوید، اما این نشانه رشد و تحول است.";
+            } else {
+                analysis = "شما تازه شروع به کاوش در خود کرده‌اید. این سفر تازه آغاز شده و فرصت‌های زیادی برای کشف خود واقعی‌تان پیش رو دارید.";
+            }
+            
+            if (traits.length > 0) {
+                analysis += "\n\nویژگی‌های بارز شما: " + traits.join(", ") + " است. این ویژگی‌ها نشان می‌دهد که ";
+                
+                if (traits.includes('درون‌گرا') && traits.includes('تحلیلی')) {
+                    analysis += "تفکر عمیق و تحلیل‌گرایی از خصوصیات اصلی شماست.";
+                } else if (traits.includes('ماجراجو') && traits.includes('خلاق')) {
+                    analysis += "نگاه خلاقانه و جسارت در کشف ناشناخته‌ها در شما قوی است.";
+                } else if (traits.includes('منطقی') && traits.includes('مستقل')) {
+                    analysis += "استقلال فکری و منطق محوری در تصمیم‌گیری‌های شما مشهود است.";
+                } else {
+                    analysis += "ترکیب منحصر به فردی از ویژگی‌ها دارید که شما را خاص می‌کند.";
+                }
+            }
+            
+            return analysis;
+        }
+        
+        // نمایش نتایج
+        function showResults() {
+            // مخفی کردن صفحه آزمون
+            document.getElementById('game-container').style.display = 'none';
+            
+            // نمایش صفحه نتایج
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.style.display = 'block';
+            
+            // پر کردن خلاصه نتایج
+            const resultsSummary = document.getElementById('results-summary');
+            resultsSummary.innerHTML = `
+                <div class="result-card">
+                    <div class="result-icon"><i class="fas fa-star"></i></div>
+                    <div class="result-value">${Game.results.totalScore}</div>
+                    <div class="result-label">امتیاز کل</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon"><i class="fas fa-clock"></i></div>
+                    <div class="result-value">${Math.floor(Game.results.timeSpent / 60)}:${(Game.results.timeSpent % 60).toString().padStart(2, '0')}</div>
+                    <div class="result-label">زمان صرف شده</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon"><i class="fas fa-brain"></i></div>
+                    <div class="result-value">${Game.results.personalityTraits.length}</div>
+                    <div class="result-label">ویژگی‌های شناسایی شده</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="result-value">${Math.round((Object.keys(Game.state.answers).length / Game.totalQuestions) * 100)}%</div>
+                    <div class="result-label">میزان تکمیل</div>
+                </div>
+            `;
+            
+            // پر کردن تحلیل شخصیت
+            document.getElementById('personality-analysis').textContent = Game.results.analysis;
+            
+            // پر کردن ویژگی‌های شخصیتی
+            const traitsContainer = document.getElementById('personality-traits');
+            traitsContainer.innerHTML = '';
+            Game.results.personalityTraits.forEach(trait => {
+                const badge = document.createElement('div');
+                badge.className = 'trait-badge';
+                badge.textContent = trait;
+                traitsContainer.appendChild(badge);
+            });
+        }
+        
+        // ذخیره نتایج
+        function saveResults() {
+            const saveData = {
+                examData: Game.examData,
+                answers: Game.state.answers,
+                results: Game.results,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('demur_exam_results', JSON.stringify(saveData));
+            
+            // همچنین می‌توان به سرور ارسال کرد
+            // sendResultsToServer(saveData);
+        }
+        
+        // ==================== کنترل بازی ====================
+        // شروع مجدد آزمون
+        function restartExam() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید آزمون را مجدداً شروع کنید؟ تمام پاسخ‌های فعلی پاک خواهند شد.')) {
+                // بازنشانی حالت
+                Game.state = {
+                    loaded: true,
+                    examStarted: false,
+                    currentQuestion: 0,
+                    answers: {},
+                    startTime: null,
+                    timerInterval: null,
+                    isPaused: false
+                };
+                
+                Game.results = {
+                    totalScore: 0,
+                    categoryScores: {},
+                    personalityTraits: [],
+                    analysis: ""
+                };
+                
+                Game.elapsedTime = 0;
+                
+                // توقف تایمر قبلی
+                clearInterval(Game.state.timerInterval);
+                
+                // مخفی کردن نتایج
+                document.getElementById('results-container').style.display = 'none';
+                document.getElementById('pause-menu').style.display = 'none';
+                
+                // نمایش صفحه آزمون
+                document.getElementById('game-container').style.display = 'block';
+                
+                // شروع مجدد
+                loadQuestion(0);
+                Game.state.examStarted = true;
+                Game.state.startTime = new Date();
+                startTimer();
+                
+                showNotification('آزمون مجدداً شروع شد!');
+            }
+        }
+        
+        // اشتراک‌گذاری نتایج
+        function shareResults() {
+            const text = `نتایج آزمون روانشناسی Demur من:
+امتیاز: ${Game.results.totalScore}
+ویژگی‌های شخصیتی: ${Game.results.personalityTraits.join(', ')}
+            
+برای شرکت در آزمون به demur-game.com مراجعه کنید.`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'نتایج آزمون Demur',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                // کپی به کلیپ‌بورد
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('نتایج در کلیپ‌بورد کپی شد!');
+                });
+            }
+        }
+        
+        // نمایش جزئیات بیشتر
+        function showDetails() {
+            let details = `جزئیات کامل نتایج:\n\n`;
+            details += `تاریخ انجام: ${Game.results.completionDate}\n`;
+            details += `زمان صرف شده: ${Math.floor(Game.results.timeSpent / 60)} دقیقه و ${Game.results.timeSpent % 60} ثانیه\n`;
+            details += `تعداد سوالات پاسخ داده شده: ${Object.keys(Game.state.answers).length} از ${Game.totalQuestions}\n\n`;
+            
+            details += `امتیاز دسته‌بندی‌ها:\n`;
+            Object.keys(Game.results.categoryScores).forEach(category => {
+                const avg = Game.results.categoryScores[category].average.toFixed(1);
+                details += `• ${category}: ${avg}\n`;
+            });
+            
+            alert(details);
+        }
+        
+        // کنترل پاوز
+        function togglePause() {
+            Game.state.isPaused = !Game.state.isPaused;
+            
+            if (Game.state.isPaused) {
+                document.getElementById('pause-menu').style.display = 'flex';
+                Game.sounds.music.pause();
+            } else {
+                document.getElementById('pause-menu').style.display = 'none';
+                Game.sounds.music.play();
+            }
+        }
+        
+        function resumeExam() {
+            Game.state.isPaused = false;
+            document.getElementById('pause-menu').style.display = 'none';
+            Game.sounds.music.play();
+        }
+        
+        // بازگشت به منوی اصلی
+        function goToMainMenu() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید به منوی اصلی بازگردید؟ پیشرفت فعلی ذخیره خواهد شد.')) {
+                saveResults();
+                window.location.href = 'main.html';
+            }
+        }
+        
+        // نمایش اعلان
+        function showNotification(message, duration = 3000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                    notification.style.opacity = '1';
+                }, 500);
+            }, duration);
+        }
+        
+        // ==================== تابع کمکی برای بارگذاری فایل JSON واقعی ====================
+        async function loadRealQuestions() {
+            try {
+                const response = await fetch('soal.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                Game.examData = data;
+                Game.questions = data.questions;
+                Game.totalQuestions = data.questions.length;
+                
+                // به‌روزرسانی UI
+                document.getElementById('exam-title').textContent = data.exam_title;
+                document.getElementById('total-questions').textContent = Game.totalQuestions;
+                
+            } catch (error) {
+                console.error('خطا در بارگذاری فایل soal.json:', error);
+                // استفاده از سوالات نمونه در صورت خطا
+                await loadQuestions();
+                showNotification('استفاده از سوالات نمونه به دلیل خطا در بارگذاری فایل');
+            }
+        }
+        
+        // در صورت نیاز، تابع loadRealQuestions() را جایگزین loadQuestions() در initGame() کنید
     </script>
 </body>
 </html>
