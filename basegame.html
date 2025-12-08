@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Demur - بازی اصلی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+        }
+        
+        /* فونت فارسی */
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+        }
+        
+        /* انتقال ورود */
+        #entry-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #000 0%, #0a0a0a 100%);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 2s ease-in-out;
+        }
+        
+        .entry-text {
+            font-size: 3rem;
+            color: #2ecc71;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInEntry 2s forwards;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.7);
+        }
+        
+        @keyframes fadeInEntry {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* کنترول بازی */
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* هدر بازی */
+        .game-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.9), transparent);
+            pointer-events: none;
+        }
+        
+        .game-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2ecc71;
+            text-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+            pointer-events: auto;
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 30px;
+            background: rgba(20, 20, 20, 0.7);
+            padding: 10px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            pointer-events: auto;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ccc;
+        }
+        
+        .stat-icon {
+            color: #2ecc71;
+            font-size: 1.2rem;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        /* HUD (وضعیت بازی) */
+        .hud-container {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .player-health {
+            background: rgba(20, 20, 20, 0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            min-width: 250px;
+            pointer-events: auto;
+        }
+        
+        .health-bar-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(100, 100, 100, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .health-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #e74c3c, #2ecc71);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .health-text {
+            display: flex;
+            justify-content: space-between;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        .player-actions {
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+        }
+        
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(20, 20, 20, 0.7);
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .action-btn:hover {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: rgba(46, 204, 113, 0.6);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        /* پنل داستان و دستورات */
+        .story-panel {
+            position: fixed;
+            top: 50%;
+            left: 40px;
+            transform: translateY(-50%);
+            width: 350px;
+            background: rgba(15, 15, 15, 0.85);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(-50%) translateX(-50px);
+            transition: all 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .story-panel.active {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+        
+        .story-title {
+            font-size: 1.5rem;
+            color: #2ecc71;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .story-text {
+            color: #ccc;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .story-text::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .story-text::-webkit-scrollbar-thumb {
+            background: #2ecc71;
+            border-radius: 5px;
+        }
+        
+        .objective-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .objective-item {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 8px;
+            border-right: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .objective-item.completed {
+            border-right-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+        }
+        
+        .objective-item i {
+            color: #2ecc71;
+        }
+        
+        /* موجودیت‌های بازی */
+        .entity-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(46, 204, 113, 0.5);
+            border: 2px solid #2ecc71;
+            z-index: 10;
+            pointer-events: none;
+            animation: pulse-marker 2s infinite;
+        }
+        
+        @keyframes pulse-marker {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
+            50% { transform: scale(1.2); box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
+        }
+        
+        /* پنل موجودیت */
+        .entity-panel {
+            position: fixed;
+            top: 50%;
+            right: 40px;
+            transform: translateY(-50%);
+            width: 300px;
+            background: rgba(15, 15, 15, 0.85);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(-50%) translateX(50px);
+            transition: all 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .entity-panel.active {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+        
+        .entity-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .entity-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #2ecc71, #1abc9c);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #000;
+        }
+        
+        .entity-name {
+            font-size: 1.3rem;
+            color: #fff;
+        }
+        
+        .entity-type {
+            font-size: 0.9rem;
+            color: #2ecc71;
+        }
+        
+        .entity-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-bar {
+            height: 6px;
+            background: rgba(100, 100, 100, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 3px;
+        }
+        
+        .entity-action {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #2ecc71, #1abc9c);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .entity-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        /* پنل موجودیت */
+        .inventory-panel {
+            position: fixed;
+            bottom: 120px;
+            left: 40px;
+            width: 500px;
+            background: rgba(15, 15, 15, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .inventory-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .inventory-title {
+            font-size: 1.5rem;
+            color: #2ecc71;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+        
+        .inventory-item {
+            aspect-ratio: 1;
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 10px;
+        }
+        
+        .inventory-item:hover {
+            border-color: #2ecc71;
+            transform: translateY(-5px);
+            background: rgba(46, 204, 113, 0.1);
+        }
+        
+        .item-icon {
+            font-size: 2rem;
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+        
+        .item-name {
+            font-size: 0.8rem;
+            color: #ccc;
+            text-align: center;
+        }
+        
+        /* پنل مهارت‌ها */
+        .skills-panel {
+            position: fixed;
+            bottom: 120px;
+            right: 40px;
+            width: 400px;
+            background: rgba(15, 15, 15, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .skills-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .skill-tree {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .skill-node {
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .skill-node:hover {
+            border-color: #2ecc71;
+            transform: translateY(-5px);
+        }
+        
+        .skill-node.unlocked {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+        }
+        
+        .skill-icon {
+            font-size: 1.5rem;
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+        
+        .skill-name {
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .skill-desc {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        
+        /* دکمه‌های کنترل پنل */
+        .panel-toggle {
+            position: fixed;
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 40;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel-toggle:hover {
+            background: rgba(46, 204, 113, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .story-toggle {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+        }
+        
+        .inventory-toggle {
+            bottom: 200px;
+            left: 20px;
+        }
+        
+        .skills-toggle {
+            bottom: 200px;
+            right: 20px;
+        }
+        
+        /* منوی پاوز */
+        .pause-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .pause-menu.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .pause-content {
+            background: rgba(15, 15, 15, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            width: 500px;
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.5s ease;
+        }
+        
+        .pause-menu.active .pause-content {
+            transform: scale(1);
+        }
+        
+        .pause-title {
+            font-size: 3rem;
+            color: #2ecc71;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+        }
+        
+        .pause-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .pause-option {
+            padding: 15px;
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            border-radius: 10px;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pause-option:hover {
+            background: rgba(46, 204, 113, 0.2);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+        
+        /* صدا */
+        .sound-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(20, 20, 20, 0.7);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(46, 204, 113, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        /* ریسپانسیو */
+        @media (max-width: 1200px) {
+            .story-panel, .entity-panel {
+                width: 300px;
+            }
+            
+            .inventory-panel {
+                width: 400px;
+            }
+            
+            .skills-panel {
+                width: 350px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .game-header {
+                padding: 15px 20px;
+            }
+            
+            .game-stats {
+                display: none;
+            }
+            
+            .story-panel, .entity-panel, .inventory-panel, .skills-panel {
+                width: calc(100% - 40px);
+                left: 20px;
+                right: 20px;
+            }
+            
+            .story-panel {
+                top: 100px;
+                transform: translateY(0) translateX(0);
+            }
+            
+            .story-panel.active {
+                transform: translateY(0) translateX(0);
+            }
+            
+            .entity-panel {
+                top: auto;
+                bottom: 200px;
+                transform: translateY(0) translateX(0);
+            }
+            
+            .entity-panel.active {
+                transform: translateY(0) translateX(0);
+            }
+            
+            .hud-container {
+                padding: 0 20px;
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .player-actions {
+                order: -1;
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .panel-toggle {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .story-toggle {
+                top: 80px;
+                left: 10px;
+            }
+        }
+        
+        /* اسکرول بار سفارشی */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #2ecc71;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+    <!-- انتقال ورود -->
+    <div id="entry-transition">
+        <div class="entry-text">ورود به دنیای Demur</div>
+    </div>
+    
+    <!-- کنترول سه بعدی بازی -->
+    <div id="game-container"></div>
+    
+    <!-- هدر بازی -->
+    <div class="game-header">
+        <div class="game-logo">DEMUR</div>
+        <div class="game-stats">
+            <div class="stat-item">
+                <i class="fas fa-coins stat-icon"></i>
+                <span>طلا:</span>
+                <span class="stat-value" id="gold-value">1250</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-gem stat-icon"></i>
+                <span>کریستال:</span>
+                <span class="stat-value" id="crystal-value">45</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-map-marked-alt stat-icon"></i>
+                <span>سطح:</span>
+                <span class="stat-value" id="level-value">3</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- HUD بازی -->
+    <div class="hud-container">
+        <div class="player-health">
+            <div class="health-bar-container">
+                <div class="health-bar" id="health-bar" style="width: 85%;"></div>
+            </div>
+            <div class="health-text">
+                <span>سلامت</span>
+                <span id="health-value">85/100</span>
+            </div>
+        </div>
+        
+        <div class="player-actions">
+            <div class="action-btn" id="attack-btn">
+                <i class="fas fa-fist-raised"></i>
+            </div>
+            <div class="action-btn" id="defend-btn">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="action-btn" id="spell-btn">
+                <i class="fas fa-magic"></i>
+            </div>
+            <div class="action-btn" id="item-btn">
+                <i class="fas fa-potion"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- پنل داستان -->
+    <div class="story-panel" id="story-panel">
+        <div class="story-title">مأموریت فعلی</div>
+        <div class="story-text" id="story-text">
+            تو در شهر متروکه "آکرونیا" بیدار شده‌ای. شهر که روزی مرکز تمدن بود، اکنون در سکوت و تاریکی فرو رفته است. موجودات عجیبی در تاریکی پرسه می‌زنند. اولین مأموریت تو بررسی برج بلند در مرکز شهر است. شایعاتی درباره یک جعبه مرموز در بالای برج وجود دارد که ممکن است کلید حل این معما باشد.
+            
+            مراقب باش! برخی از موجودات تنها در شب ظاهر می‌شوند و حمله می‌کنند. باید قبل از غروب آفتاب به برج برسی و جعبه را بررسی کنی.
+        </div>
+        <ul class="objective-list" id="objective-list">
+            <li class="objective-item completed">
+                <i class="fas fa-check-circle"></i>
+                <span>بیدار شدن در شهر آکرونیا</span>
+            </li>
+            <li class="objective-item">
+                <i class="fas fa-spinner"></i>
+                <span>بررسی برج مرکزی</span>
+            </li>
+            <li class="objective-item">
+                <i class="fas fa-clock"></i>
+                <span>یافتن جعبه مرموز</span>
+            </li>
+            <li class="objective-item">
+                <i class="fas fa-skull"></i>
+                <span>مقابله با موجودات شب</span>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- پنل موجودیت -->
+    <div class="entity-panel" id="entity-panel">
+        <div class="entity-header">
+            <div class="entity-icon">
+                <i class="fas fa-dragon"></i>
+            </div>
+            <div>
+                <div class="entity-name">اژدهای کریستالی</div>
+                <div class="entity-type">موجود افسانه‌ای</div>
+            </div>
+        </div>
+        
+        <div class="entity-stats">
+            <div>
+                <div>سلامت</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: 70%;"></div>
+                </div>
+            </div>
+            <div>
+                <div>حمله</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: 90%;"></div>
+                </div>
+            </div>
+            <div>
+                <div>دفاع</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: 60%;"></div>
+                </div>
+            </div>
+            <div>
+                <div>سرعت</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" style="width: 50%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="entity-description">
+            اژدهای باستانی که از کریستال‌های شهر محافظت می‌کند. پوست آن از کریستال ساخته شده و در برابر حملات فیزیکی مقاوم است اما در مقابل جادوی آب آسیب‌پذیر است.
+        </div>
+        
+        <button class="entity-action" id="entity-action-btn">مبارزه</button>
+    </div>
+    
+    <!-- پنل موجودیت -->
+    <div class="inventory-panel" id="inventory-panel">
+        <div class="inventory-title">
+            <span>موجودیت</span>
+            <span>ظرفیت: 12/20</span>
+        </div>
+        <div class="inventory-grid" id="inventory-grid">
+            <!-- آیتم‌ها توسط جاوااسکریپت اضافه خواهند شد -->
+        </div>
+    </div>
+    
+    <!-- پنل مهارت‌ها -->
+    <div class="skills-panel" id="skills-panel">
+        <div class="inventory-title">مهارت‌ها</div>
+        <div class="skill-tree" id="skill-tree">
+            <!-- مهارت‌ها توسط جاوااسکریپت اضافه خواهند شد -->
+        </div>
+    </div>
+    
+    <!-- دکمه‌های کنترل پنل -->
+    <div class="panel-toggle story-toggle" id="story-toggle">
+        <i class="fas fa-book"></i>
+    </div>
+    
+    <div class="panel-toggle inventory-toggle" id="inventory-toggle">
+        <i class="fas fa-backpack"></i>
+    </div>
+    
+    <div class="panel-toggle skills-toggle" id="skills-toggle">
+        <i class="fas fa-fire-alt"></i>
+    </div>
+    
+    <!-- دکمه صدا -->
+    <div class="sound-toggle" id="sound-toggle">
+        <i class="fas fa-volume-up"></i>
+    </div>
+    
+    <!-- منوی پاوز -->
+    <div class="pause-menu" id="pause-menu">
+        <div class="pause-content">
+            <div class="pause-title">توقف بازی</div>
+            <div class="pause-options">
+                <div class="pause-option" id="resume-btn">ادامه بازی</div>
+                <div class="pause-option" id="settings-btn">تنظیمات</div>
+                <div class="pause-option" id="save-btn">ذخیره بازی</div>
+                <div class="pause-option" id="quit-btn">خروج به منوی اصلی</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- موسیقی و صداها -->
+    <audio id="background-music" loop>
+        <source src="https://raw.githubusercontent.com/abolfazl140122/Demur/018d52042cb43d84da7c17daf49f35da735bd3e9/%D9%85%D9%88%D8%B2%DB%8C%DA%A9%20%D8%A8%D8%AF%20%DA%AF%D8%B1%D8%A7%D9%86%D8%AF%20%D8%B5%D9%81%D9%87%20%D9%84%D9%88%D8%AF%DB%8C%D9%86%DA%AF%20%D8%A7%DB%8C%D8%B3%D8%AA%D8%A7%D8%AF%D9%87.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+    
+    <audio id="attack-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-sword-slash-2768.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+    
+    <audio id="spell-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-spell-illusion-312.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+    
+    <audio id="item-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+    
+    <audio id="notification-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+        مرورگر شما از عنصر صوتی پشتیبانی نمی‌کند.
+    </audio>
+
+    <script>
+        // مدیریت ورود
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('entry-transition').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('entry-transition').remove();
+                    initGame();
+                }, 2000);
+            }, 2000);
+        });
+        
+        // مقادیر اولیه بازی
+        let gameState = {
+            health: 85,
+            maxHealth: 100,
+            gold: 1250,
+            crystals: 45,
+            level: 3,
+            currentObjective: 1,
+            inventory: [],
+            skills: [],
+            isPaused: false,
+            musicPlaying: true
+        };
+        
+        // آیتم‌های موجودیت
+        const inventoryItems = [
+            { id: 1, name: "شمشیر فولادی", icon: "fas fa-sword", type: "weapon" },
+            { id: 2, name: "زره چرمی", icon: "fas fa-vest", type: "armor" },
+            { id: 3, name: "طلسم محافظ", icon: "fas fa-gem", type: "artifact" },
+            { id: 4, name: "پotion درمانی", icon: "fas fa-wine-bottle", type: "potion" },
+            { id: 5, name: "کلید برنزی", icon: "fas fa-key", type: "key" },
+            { id: 6, name: "نقشه شهر", icon: "fas fa-map", type: "map" },
+            { id: 7, name: "چراغ جادو", icon: "fas fa-lamp", type: "tool" },
+            { id: 8, name: "کتاب طلسم‌ها", icon: "fas fa-book-sparkles", type: "book" },
+            { id: 9, name: "تیر و کمان", icon: "fas fa-bow-arrow", type: "weapon" },
+            { id: 10, name: "کیسه طلا", icon: "fas fa-coins", type: "currency" }
+        ];
+        
+        // مهارت‌های بازی
+        const gameSkills = [
+            { id: 1, name: "حمله قدرتمند", icon: "fas fa-fist-raised", description: "حمله‌ای با قدرت ۲۰٪ بیشتر", unlocked: true },
+            { id: 2, name: "دفاع فولادی", icon: "fas fa-shield-alt", description: "دفاع ۱۵٪ افزایش می‌یابد", unlocked: true },
+            { id: 3, name: "طلسم آتش", icon: "fas fa-fire", description: "طلاق آتشی به دشمنان", unlocked: false },
+            { id: 4, name: "شفای سریع", icon: "fas fa-heart", description: "۲۵٪ سلامت بازیابی می‌شود", unlocked: false },
+            { id: 5, name: "استتار", icon: "fas fa-user-secret", description: "پنهان شدن از دید دشمنان", unlocked: false },
+            { id: 6, name: "حمله سریع", icon: "fas fa-bolt", description: "سرعت حمله ۳۰٪ افزایش می‌یابد", unlocked: true }
+        ];
+        
+        // صداها
+        const backgroundMusic = document.getElementById('background-music');
+        const attackSound = document.getElementById('attack-sound');
+        const spellSound = document.getElementById('spell-sound');
+        const itemSound = document.getElementById('item-sound');
+        const notificationSound = document.getElementById('notification-sound');
+        
+        // پخش موسیقی پس زمینه
+        function playBackgroundMusic() {
+            if (gameState.musicPlaying) {
+                backgroundMusic.volume = 0.3;
+                backgroundMusic.play().catch(e => console.log("اتوماتیک پلی بلاک شده"));
+            }
+        }
+        
+        // پخش صدا
+        function playSound(soundElement) {
+            if (gameState.musicPlaying) {
+                soundElement.currentTime = 0;
+                soundElement.play().catch(e => console.log("خطا در پخش صدا"));
+            }
+        }
+        
+        // تابع اصلی بازی
+        function initGame() {
+            // پخش موسیقی
+            playBackgroundMusic();
+            
+            // بارگذاری موجودیت
+            loadInventory();
+            loadSkills();
+            
+            // تنظیم رویدادها
+            setupEventListeners();
+            
+            // به‌روزرسانی وضعیت بازی
+            updateGameUI();
+            
+            // راه‌اندازی Three.js برای گرافیک سه‌بعدی
+            initThreeJS();
+            
+            // نمایش پنل داستان
+            setTimeout(() => {
+                document.getElementById('story-panel').classList.add('active');
+            }, 1000);
+            
+            // پیام خوش‌آمدگویی به کنسول
+            console.log('%c بازی Demur راه‌اندازی شد! %c\nماجراجویی در شهر آکرونیا آغاز می‌شود...', 
+                'background: #2ecc71; color: #000; font-size: 16px; font-weight: bold; padding: 5px 10px; border-radius: 5px;',
+                'color: #2ecc71; font-size: 14px;'
+            );
+        }
+        
+        // بارگذاری موجودیت
+        function loadInventory() {
+            const inventoryGrid = document.getElementById('inventory-grid');
+            inventoryGrid.innerHTML = '';
+            
+            inventoryItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'inventory-item';
+                itemElement.innerHTML = `
+                    <div class="item-icon"><i class="${item.icon}"></i></div>
+                    <div class="item-name">${item.name}</div>
+                `;
+                itemElement.addEventListener('click', () => {
+                    selectInventoryItem(item);
+                });
+                inventoryGrid.appendChild(itemElement);
+            });
+        }
+        
+        // بارگذاری مهارت‌ها
+        function loadSkills() {
+            const skillTree = document.getElementById('skill-tree');
+            skillTree.innerHTML = '';
+            
+            gameSkills.forEach(skill => {
+                const skillElement = document.createElement('div');
+                skillElement.className = `skill-node ${skill.unlocked ? 'unlocked' : ''}`;
+                skillElement.innerHTML = `
+                    <div class="skill-icon"><i class="${skill.icon}"></i></div>
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.description}</div>
+                `;
+                skillElement.addEventListener('click', () => {
+                    selectSkill(skill);
+                });
+                skillTree.appendChild(skillElement);
+            });
+        }
+        
+        // انتخاب آیتم موجودیت
+        function selectInventoryItem(item) {
+            playSound(itemSound);
+            showNotification(`آیتم ${item.name} انتخاب شد`);
+            
+            // اجرای عمل بر اساس نوع آیتم
+            switch(item.type) {
+                case 'potion':
+                    gameState.health = Math.min(gameState.maxHealth, gameState.health + 20);
+                    updateHealth();
+                    showNotification('۲۰ واحد سلامت بازیابی شد');
+                    break;
+                case 'weapon':
+                    showNotification('اسلحه برای مبارزه آماده است');
+                    break;
+                case 'key':
+                    showNotification('شاید این کلید درب خاصی را باز کند...');
+                    break;
+            }
+        }
+        
+        // انتخاب مهارت
+        function selectSkill(skill) {
+            if (skill.unlocked) {
+                playSound(spellSound);
+                showNotification(`مهارت ${skill.name} فعال شد`);
+            } else {
+                showNotification('این مهارت هنوز باز نشده است');
+            }
+        }
+        
+        // نمایش اعلان
+        function showNotification(message) {
+            // ایجاد المان اعلان
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.top = '100px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.background = 'rgba(20, 20, 20, 0.9)';
+            notification.style.color = '#2ecc71';
+            notification.style.padding = '15px 25px';
+            notification.style.borderRadius = '10px';
+            notification.style.border = '1px solid rgba(46, 204, 113, 0.3)';
+            notification.style.zIndex = '1000';
+            notification.style.backdropFilter = 'blur(10px)';
+            notification.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.5)';
+            notification.style.fontSize = '1rem';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // پخش صدای اعلان
+            playSound(notificationSound);
+            
+            // حذف اعلان پس از 3 ثانیه
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                notification.style.transition = 'opacity 0.5s, transform 0.5s';
+                
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+        
+        // به‌روزرسانی سلامت
+        function updateHealth() {
+            const healthBar = document.getElementById('health-bar');
+            const healthValue = document.getElementById('health-value');
+            
+            const percent = (gameState.health / gameState.maxHealth) * 100;
+            healthBar.style.width = `${percent}%`;
+            healthValue.textContent = `${gameState.health}/${gameState.maxHealth}`;
+            
+            // تغییر رنگ نوار سلامت بر اساس مقدار
+            if (percent > 70) {
+                healthBar.style.background = 'linear-gradient(90deg, #2ecc71, #1abc9c)';
+            } else if (percent > 30) {
+                healthBar.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+            } else {
+                healthBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+            }
+        }
+        
+        // به‌روزرسانی UI بازی
+        function updateGameUI() {
+            // به‌روزرسانی سلامت
+            updateHealth();
+            
+            // به‌روزرسانی مقادیر
+            document.getElementById('gold-value').textContent = gameState.gold;
+            document.getElementById('crystal-value').textContent = gameState.crystals;
+            document.getElementById('level-value').textContent = gameState.level;
+        }
+        
+        // تنظیم رویدادها
+        function setupEventListeners() {
+            // دکمه حمله
+            document.getElementById('attack-btn').addEventListener('click', () => {
+                playSound(attackSound);
+                performAttack();
+            });
+            
+            // دکمه دفاع
+            document.getElementById('defend-btn').addEventListener('click', () => {
+                showNotification('حالت دفاعی فعال شد');
+            });
+            
+            // دکمه طلسم
+            document.getElementById('spell-btn').addEventListener('click', () => {
+                playSound(spellSound);
+                castSpell();
+            });
+            
+            // دکمه آیتم
+            document.getElementById('item-btn').addEventListener('click', () => {
+                playSound(itemSound);
+                useItem();
+            });
+            
+            // دکمه موجودیت
+            document.getElementById('entity-action-btn').addEventListener('click', () => {
+                startCombat();
+            });
+            
+            // دکمه‌های کنترل پنل
+            document.getElementById('story-toggle').addEventListener('click', () => {
+                togglePanel('story-panel');
+            });
+            
+            document.getElementById('inventory-toggle').addEventListener('click', () => {
+                togglePanel('inventory-panel');
+            });
+            
+            document.getElementById('skills-toggle').addEventListener('click', () => {
+                togglePanel('skills-panel');
+            });
+            
+            // دکمه صدا
+            document.getElementById('sound-toggle').addEventListener('click', () => {
+                toggleSound();
+            });
+            
+            // دکمه‌های منوی پاوز
+            document.getElementById('resume-btn').addEventListener('click', () => {
+                togglePauseMenu();
+            });
+            
+            document.getElementById('settings-btn').addEventListener('click', () => {
+                showNotification('تنظیمات در دست توسعه است');
+            });
+            
+            document.getElementById('save-btn').addEventListener('click', () => {
+                saveGame();
+            });
+            
+            document.getElementById('quit-btn').addEventListener('click', () => {
+                quitToMainMenu();
+            });
+            
+            // کنترل پاوز با کلید Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Escape') {
+                    togglePauseMenu();
+                }
+                
+                // کنترل‌های سریع
+                if (!gameState.isPaused) {
+                    switch(e.code) {
+                        case 'KeyA':
+                            document.getElementById('attack-btn').click();
+                            break;
+                        case 'KeyD':
+                            document.getElementById('defend-btn').click();
+                            break;
+                        case 'KeyS':
+                            document.getElementById('spell-btn').click();
+                            break;
+                        case 'KeyI':
+                            document.getElementById('inventory-toggle').click();
+                            break;
+                        case 'KeyK':
+                            document.getElementById('skills-toggle').click();
+                            break;
+                        case 'KeyM':
+                            toggleSound();
+                            break;
+                    }
+                }
+            });
+            
+            // کلیک خارج از پنل‌ها برای بستن
+            document.addEventListener('click', (e) => {
+                const panels = ['story-panel', 'inventory-panel', 'skills-panel', 'entity-panel'];
+                const toggles = ['story-toggle', 'inventory-toggle', 'skills-toggle'];
+                
+                const isPanel = panels.some(panel => 
+                    document.getElementById(panel).contains(e.target)
+                );
+                
+                const isToggle = toggles.some(toggle => 
+                    document.getElementById(toggle).contains(e.target)
+                );
+                
+                if (!isPanel && !isToggle) {
+                    panels.forEach(panel => {
+                        document.getElementById(panel).classList.remove('active');
+                    });
+                }
+            });
+        }
+        
+        // عملکرد حمله
+        function performAttack() {
+            showNotification('حمله انجام شد!');
+            
+            // شانس آسیب
+            const damage = Math.floor(Math.random() * 20) + 10;
+            showNotification(`${damage} واحد آسیب وارد شد`);
+            
+            // به‌روزرسانی اهداف
+            updateObjectives();
+        }
+        
+        // عملکرد طلسم
+        function castSpell() {
+            showNotification('طلسم جادویی فعال شد!');
+            
+            // شانس موفقیت طلسم
+            const spellTypes = ['آتش', 'یخ', 'برق', 'سایه'];
+            const randomSpell = spellTypes[Math.floor(Math.random() * spellTypes.length)];
+            
+            showNotification(`طلسم ${randomSpell} ایجاد شد`);
+            
+            // به‌روزرسانی اهداف
+            updateObjectives();
+        }
+        
+        // استفاده از آیتم
+        function useItem() {
+            showNotification('از یک آیتم استفاده شد');
+            
+            // افزایش سلامت تصادفی
+            const healAmount = Math.floor(Math.random() * 15) + 5;
+            gameState.health = Math.min(gameState.maxHealth, gameState.health + healAmount);
+            updateHealth();
+            
+            showNotification(`${healAmount} واحد سلامت بازیابی شد`);
+        }
+        
+        // شروع مبارزه
+        function startCombat() {
+            playSound(attackSound);
+            showNotification('مبارزه با اژدهای کریستالی آغاز شد!');
+            
+            // نمایش پنل موجودیت
+            document.getElementById('entity-panel').classList.add('active');
+            
+            // شبیه‌سازی مبارزه
+            simulateCombat();
+        }
+        
+        // شبیه‌سازی مبارزه
+        function simulateCombat() {
+            let dragonHealth = 70;
+            let playerHealth = gameState.health;
+            
+            // حلقه مبارزه
+            const combatInterval = setInterval(() => {
+                // حمله بازیکن
+                const playerDamage = Math.floor(Math.random() * 15) + 5;
+                dragonHealth -= playerDamage;
+                
+                // حمله اژدها
+                const dragonDamage = Math.floor(Math.random() * 10) + 3;
+                playerHealth -= dragonDamage;
+                
+                // به‌روزرسانی UI
+                updateEntityHealth(dragonHealth);
+                gameState.health = playerHealth;
+                updateHealth();
+                
+                // بررسی پایان مبارزه
+                if (dragonHealth <= 0) {
+                    clearInterval(combatInterval);
+                    endCombat(true);
+                } else if (playerHealth <= 0) {
+                    clearInterval(combatInterval);
+                    endCombat(false);
+                }
+            }, 1000);
+        }
+        
+        // به‌روزرسانی سلامت موجودیت
+        function updateEntityHealth(health) {
+            const healthBar = document.querySelector('.entity-panel .stat-fill');
+            const percent = (health / 100) * 100;
+            healthBar.style.width = `${percent}%`;
+        }
+        
+        // پایان مبارزه
+        function endCombat(playerWon) {
+            if (playerWon) {
+                showNotification('اژدهای کریستالی شکست خورد!');
+                
+                // پاداش
+                gameState.gold += 200;
+                gameState.crystals += 5;
+                updateGameUI();
+                
+                showNotification('۲۰۰ طلا و ۵ کریستال دریافت کردید');
+                
+                // به‌روزرسانی اهداف
+                const objectives = document.querySelectorAll('.objective-item');
+                if (objectives.length > 1) {
+                    objectives[1].classList.add('completed');
+                }
+            } else {
+                showNotification('شکست خوردید! سلامت شما بازیابی شد');
+                gameState.health = 30;
+                updateHealth();
+            }
+            
+            // بستن پنل موجودیت
+            setTimeout(() => {
+                document.getElementById('entity-panel').classList.remove('active');
+            }, 3000);
+        }
+        
+        // به‌روزرسانی اهداف
+        function updateObjectives() {
+            const objectives = document.querySelectorAll('.objective-item');
+            const completedCount = document.querySelectorAll('.objective-item.completed').length;
+            
+            // اگر همه اهداف کامل نشده‌اند، یکی را کامل کن
+            if (completedCount < objectives.length) {
+                objectives[completedCount].classList.add('completed');
+                
+                // اگر هدف سوم کامل شد، پاداش بده
+                if (completedCount === 2) {
+                    gameState.gold += 100;
+                    gameState.crystals += 2;
+                    updateGameUI();
+                    showNotification('۱۰۰ طلا و ۲ کریستال برای پیشرفت دریافت کردید');
+                }
+            }
+        }
+        
+        // کنترل پنل‌ها
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const isActive = panel.classList.contains('active');
+            
+            // بستن همه پنل‌ها
+            document.querySelectorAll('.story-panel, .inventory-panel, .skills-panel, .entity-panel').forEach(p => {
+                p.classList.remove('active');
+            });
+            
+            // باز کردن پنل انتخاب شده اگر قبلا بسته بود
+            if (!isActive) {
+                panel.classList.add('active');
+                playSound(notificationSound);
+            }
+        }
+        
+        // کنترل صدا
+        function toggleSound() {
+            gameState.musicPlaying = !gameState.musicPlaying;
+            
+            const soundIcon = document.querySelector('#sound-toggle i');
+            
+            if (gameState.musicPlaying) {
+                backgroundMusic.volume = 0.3;
+                backgroundMusic.play();
+                soundIcon.className = 'fas fa-volume-up';
+                showNotification('صدا روشن شد');
+            } else {
+                backgroundMusic.pause();
+                soundIcon.className = 'fas fa-volume-mute';
+                showNotification('صدا خاموش شد');
+            }
+        }
+        
+        // کنترل منوی پاوز
+        function togglePauseMenu() {
+            gameState.isPaused = !gameState.isPaused;
+            const pauseMenu = document.getElementById('pause-menu');
+            
+            if (gameState.isPaused) {
+                pauseMenu.classList.add('active');
+                backgroundMusic.pause();
+            } else {
+                pauseMenu.classList.remove('active');
+                if (gameState.musicPlaying) {
+                    backgroundMusic.play();
+                }
+            }
+        }
+        
+        // ذخیره بازی
+        function saveGame() {
+            showNotification('بازی ذخیره شد!');
+            // در نسخه کامل، اینجا داده‌های بازی در localStorage ذخیره می‌شود
+            localStorage.setItem('demur_save', JSON.stringify(gameState));
+        }
+        
+        // خروج به منوی اصلی
+        function quitToMainMenu() {
+            if (confirm('آیا می‌خواهید به منوی اصلی بازگردید؟ پیشرفت ذخیره خواهد شد.')) {
+                saveGame();
+                window.location.href = 'main.html';
+            }
+        }
+        
+        // راه‌اندازی Three.js برای گرافیک سه‌بعدی ساده
+        function initThreeJS() {
+            try {
+                // ایجاد صحنه
+                const scene = new THREE.Scene();
+                scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
+                
+                // ایجاد دوربین
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 5, 10);
+                
+                // ایجاد رندرر
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x0a0a0a, 1);
+                renderer.shadowMap.enabled = true;
+                document.getElementById('game-container').appendChild(renderer.domElement);
+                
+                // نورپردازی
+                const ambientLight = new THREE.AmbientLight(0x2ecc71, 0.2);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                directionalLight.position.set(10, 20, 5);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+                
+                // نور نقطه‌ای سبز برای ایجاد وایب مرموز
+                const pointLight = new THREE.PointLight(0x2ecc71, 0.5, 50);
+                pointLight.position.set(0, 5, 0);
+                scene.add(pointLight);
+                
+                // ایجاد زمین
+                const groundGeometry = new THREE.PlaneGeometry(50, 50);
+                const groundMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x1a1a1a,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                scene.add(ground);
+                
+                // ایجاد چند مکعب به عنوان ساختمان‌های شهر
+                const buildings = [];
+                const buildingColors = [0x2ecc71, 0x1abc9c, 0x3498db, 0x9b59b6];
+                
+                for (let i = 0; i < 15; i++) {
+                    const height = Math.random() * 5 + 2;
+                    const geometry = new THREE.BoxGeometry(2, height, 2);
+                    const material = new THREE.MeshStandardMaterial({ 
+                        color: buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                        roughness: 0.7,
+                        metalness: 0.3,
+                        emissive: 0x000000,
+                        emissiveIntensity: 0.1
+                    });
+                    
+                    const building = new THREE.Mesh(geometry, material);
+                    building.position.x = (Math.random() - 0.5) * 40;
+                    building.position.z = (Math.random() - 0.5) * 40;
+                    building.position.y = height / 2;
+                    building.castShadow = true;
+                    building.receiveShadow = true;
+                    
+                    scene.add(building);
+                    buildings.push(building);
+                }
+                
+                // ایجاد یک هرم بزرگ در مرکز (برج)
+                const pyramidGeometry = new THREE.ConeGeometry(5, 10, 4);
+                const pyramidMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x2ecc71,
+                    roughness: 0.5,
+                    metalness: 0.5,
+                    emissive: 0x2ecc71,
+                    emissiveIntensity: 0.1
+                });
+                const pyramid = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
+                pyramid.position.y = 5;
+                pyramid.castShadow = true;
+                scene.add(pyramid);
+                
+                // کنترل دوربین
+                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = 5;
+                controls.maxDistance = 50;
+                controls.maxPolarAngle = Math.PI / 2 - 0.1;
+                
+                // انیمیشن
+                function animate() {
+                    requestAnimationFrame(animate);
+                    
+                    // چرخش هرم
+                    pyramid.rotation.y += 0.005;
+                    
+                    // حرکت نور نقطه‌ای
+                    pointLight.position.x = Math.sin(Date.now() * 0.001) * 10;
+                    pointLight.position.z = Math.cos(Date.now() * 0.001) * 10;
+                    
+                    // حرکت ملایم ساختمان‌ها
+                    buildings.forEach((building, index) => {
+                        building.position.y = (building.geometry.parameters.height / 2) + 
+                                            Math.sin(Date.now() * 0.001 + index) * 0.1;
+                    });
+                    
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                
+                // تنظیم تغییر اندازه پنجره
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                
+                // شروع انیمیشن
+                animate();
+                
+            } catch (error) {
+                console.log('گرافیک سه‌بعدی غیرفعال شد. مرورگر ممکن است از WebGL پشتیبانی نکند.');
+                // نمایش صفحه جایگزین
+                document.getElementById('game-container').innerHTML = `
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #2ecc71;">
+                        <i class="fas fa-dungeon" style="font-size: 5rem; margin-bottom: 20px;"></i>
+                        <h2>دنیای Demur</h2>
+                        <p>شهر متروکه آکرونیا در انتظار کشف رازهایش است...</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
